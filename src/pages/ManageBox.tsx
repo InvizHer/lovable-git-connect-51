@@ -338,12 +338,7 @@ const ManageBox = () => {
       <main className="flex-1 container mx-auto px-4 py-6 sm:py-8">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Box Details with Icon */}
-          <motion.div 
-            className="animate-fade-in"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
+          <div className="animate-fade-in">
             <Card className="glass-card border-primary/30 shadow-[var(--shadow-strong)]">
               <CardHeader>
                 {!editMode ? (
@@ -363,13 +358,7 @@ const ManageBox = () => {
                     </div>
                   </>
                 ) : (
-                  <motion.div 
-                    className="space-y-4"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
+                  <div className="space-y-4 animate-fade-in">
                     <div className="space-y-2">
                       <Label htmlFor="edit-title">Title</Label>
                       <Input
@@ -444,11 +433,8 @@ const ManageBox = () => {
                       </select>
                     </div>
                     {editCategory === "Other" && (
-                      <motion.div 
-                        className="space-y-2"
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
+                      <div 
+                        className="space-y-2 animate-fade-in"
                       >
                         <Label htmlFor="edit-custom-category">Custom Category</Label>
                         <Input
@@ -459,7 +445,7 @@ const ManageBox = () => {
                           className="bg-background/50"
                           disabled={savingEdit}
                         />
-                      </motion.div>
+                      </div>
                     )}
                     <div className="flex gap-2 pt-2">
                       <Button 
@@ -494,7 +480,7 @@ const ManageBox = () => {
                         Cancel
                       </Button>
                     </div>
-                  </motion.div>
+                  </div>
                 )}
               </CardHeader>
               <CardContent className="space-y-4">
@@ -567,7 +553,7 @@ const ManageBox = () => {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
 
           {/* Search, Filter, and Sort */}
           <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
@@ -772,7 +758,7 @@ const ManageBox = () => {
 
       {/* View Complaint Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto glass-card border-primary/30">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto glass-card border-primary/30 p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle className="text-xl sm:text-2xl break-words gradient-text">
               {selectedComplaint?.title}
@@ -813,20 +799,21 @@ const ManageBox = () => {
             {selectedComplaint?.attachment_url && (
               <div className="space-y-3">
                 <Label className="text-sm font-semibold">Attachment:</Label>
-                <div className="p-4 bg-secondary/50 rounded-lg border border-border space-y-3">
-                  <div className="flex items-center justify-between gap-3">
+                <div className="p-3 sm:p-4 bg-secondary/50 rounded-lg border border-border space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                       {selectedComplaint.attachment_type?.startsWith("image/") ? (
-                        <ImageIcon className="w-5 h-5 text-primary flex-shrink-0" />
+                        <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
                       ) : (
-                        <FileText className="w-5 h-5 text-primary flex-shrink-0" />
+                        <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
                       )}
-                      <span className="text-sm font-medium truncate">{selectedComplaint.attachment_name}</span>
+                      <span className="text-xs sm:text-sm font-medium truncate">{selectedComplaint.attachment_name}</span>
                     </div>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => window.open(selectedComplaint.attachment_url!, "_blank")}
+                      className="w-full sm:w-auto"
                     >
                       <Download className="w-4 h-4 mr-2" />
                       Download
@@ -837,7 +824,7 @@ const ManageBox = () => {
                       <img
                         src={selectedComplaint.attachment_url}
                         alt="Attachment Preview"
-                        className="w-full h-auto object-contain max-h-96"
+                        className="w-full h-auto object-contain max-h-[50vh] sm:max-h-96"
                       />
                     </div>
                   )}

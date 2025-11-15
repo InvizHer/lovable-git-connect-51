@@ -262,10 +262,7 @@ const SubmitComplaint = () => {
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto space-y-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
+          <div className="animate-fade-in">
             <Card className="glass-card border-primary/30 shadow-[var(--shadow-strong)]">
               <CardHeader>
                 <CardTitle className="text-3xl sm:text-4xl gradient-text">{box.title}</CardTitle>
@@ -314,12 +311,7 @@ const SubmitComplaint = () => {
                         ))}
                       </select>
                       {complaintCategory === "Other" && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          className="mt-2"
-                        >
+                        <div className="mt-2 animate-fade-in">
                           <Input
                             placeholder="Please specify your complaint category..."
                             value={customComplaintCategory}
@@ -328,7 +320,7 @@ const SubmitComplaint = () => {
                             required
                             className="text-base h-12 rounded-lg border-2 focus-visible:border-primary transition-all duration-200"
                           />
-                        </motion.div>
+                        </div>
                       )}
                     </>
                   ) : (
@@ -373,11 +365,11 @@ const SubmitComplaint = () => {
                       className="cursor-pointer"
                     />
                     {file && (
-                      <div className="space-y-3 p-4 bg-secondary/50 rounded-lg border border-border">
+                      <div className="space-y-3 p-3 sm:p-4 bg-secondary/50 rounded-lg border border-border">
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2 flex-1 min-w-0">
                             <Upload className="w-4 h-4 text-primary flex-shrink-0" />
-                            <span className="text-sm flex-1 truncate font-medium">{file.name}</span>
+                            <span className="text-xs sm:text-sm flex-1 truncate font-medium">{file.name}</span>
                           </div>
                           <Button
                             type="button"
@@ -390,11 +382,11 @@ const SubmitComplaint = () => {
                           </Button>
                         </div>
                         {file.type.startsWith("image/") && (
-                          <div className="relative w-full aspect-video bg-muted rounded-lg overflow-hidden">
+                          <div className="relative w-full bg-muted rounded-lg overflow-hidden">
                             <img
                               src={URL.createObjectURL(file)}
                               alt="Preview"
-                              className="w-full h-full object-contain"
+                              className="w-full h-auto object-contain max-h-[40vh] sm:max-h-[50vh]"
                             />
                           </div>
                         )}
@@ -432,13 +424,9 @@ const SubmitComplaint = () => {
               </form>
             </CardContent>
           </Card>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
+          <div className="animate-fade-in">
             <Card className="glass-card">
             <CardHeader>
               <CardTitle>Track Your Complaint</CardTitle>
@@ -456,7 +444,7 @@ const SubmitComplaint = () => {
               </Button>
             </CardContent>
           </Card>
-          </motion.div>
+          </div>
         </div>
       </main>
 

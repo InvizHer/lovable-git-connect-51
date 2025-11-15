@@ -1,7 +1,6 @@
 import { useRef, useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, QrCode as QrCodeIcon } from "lucide-react";
+import { Download } from "lucide-react";
 import { toast } from "sonner";
 import QRCodeStyling from "qr-code-styling";
 
@@ -23,7 +22,7 @@ export const QRCodeSection = ({ boxToken, boxTitle, className = "" }: QRCodeSect
 
     // Determine QR size based on viewport
     const isMobile = window.innerWidth < 640;
-    const qrSize = isMobile ? 250 : 300;
+    const qrSize = isMobile ? 220 : 280;
 
     // Create QR code instance with TellUs branding
     qrCodeInstance.current = new QRCodeStyling({
@@ -173,64 +172,46 @@ export const QRCodeSection = ({ boxToken, boxTitle, className = "" }: QRCodeSect
   };
 
   return (
-    <Card className={`glass-card border-primary/20 ${className}`}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl">
-          <QrCodeIcon className="h-5 w-5 text-primary" />
-          QR Code for This Complaint Box
-        </CardTitle>
-        <CardDescription>
-          Share this QR code to let users submit complaints easily
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col items-center gap-6">
-        {/* QR Code */}
-        <div className="flex flex-col items-center gap-4 p-4 sm:p-6 bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/10 rounded-xl shadow-sm">
-          <div 
-            ref={qrRef} 
-            className="bg-white p-3 sm:p-4 rounded-lg shadow-inner w-[250px] h-[250px] sm:w-[300px] sm:h-[300px] flex items-center justify-center"
-          />
-          
-          {/* Title below QR */}
-          <p className="text-center font-semibold text-sm sm:text-base mt-2 px-4 text-foreground">
-            {boxTitle}
-          </p>
-          
-          {/* Descriptive text */}
-          <p className="text-center text-xs sm:text-sm text-muted-foreground px-2 sm:px-4 leading-relaxed">
-            Scan this QR code to submit your complaint via <span className="font-medium text-foreground">{boxTitle}</span> complaint box
-          </p>
-        </div>
+    <div className={`flex flex-col items-center justify-center space-y-4 sm:space-y-6 ${className}`}>
+      {/* QR Code */}
+      <div className="flex flex-col items-center gap-3 sm:gap-4 w-full">
+        <div 
+          ref={qrRef} 
+          className="bg-white p-3 sm:p-4 rounded-xl shadow-lg border-2 border-primary/20 w-fit mx-auto"
+        />
+        
+        {/* Title below QR */}
+        <p className="text-center font-bold text-base sm:text-lg px-4 text-foreground">
+          {boxTitle}
+        </p>
+        
+        {/* Descriptive text */}
+        <p className="text-center text-xs sm:text-sm text-muted-foreground px-4 sm:px-6 leading-relaxed max-w-sm">
+          Scan this QR code to submit your complaint via <span className="font-semibold text-foreground">{boxTitle}</span> complaint box
+        </p>
+      </div>
 
-        {/* Download Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
-          <Button
-            onClick={handleDownloadPNG}
-            variant="default"
-            className="flex-1 gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90"
-            disabled={isGenerating}
-          >
-            <Download className="h-4 w-4" />
-            Download PNG
-          </Button>
-          <Button
-            onClick={handleDownloadSVG}
-            variant="outline"
-            className="flex-1 gap-2"
-            disabled={isGenerating}
-          >
-            <Download className="h-4 w-4" />
-            Download SVG
-          </Button>
-        </div>
-
-        {/* URL Display */}
-        <div className="w-full max-w-sm p-3 bg-muted/30 rounded-lg border border-border/50">
-          <p className="text-xs text-muted-foreground text-center break-all font-mono">
-            {complaintUrl}
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+      {/* Download Buttons */}
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full px-4 sm:px-0 max-w-sm">
+        <Button
+          onClick={handleDownloadPNG}
+          variant="default"
+          className="flex-1 gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90"
+          disabled={isGenerating}
+        >
+          <Download className="h-4 w-4" />
+          {isGenerating ? "Generating..." : "Download PNG"}
+        </Button>
+        <Button
+          onClick={handleDownloadSVG}
+          variant="outline"
+          className="flex-1 gap-2"
+          disabled={isGenerating}
+        >
+          <Download className="h-4 w-4" />
+          Download SVG
+        </Button>
+      </div>
+    </div>
   );
 };

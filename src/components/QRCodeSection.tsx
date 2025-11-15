@@ -177,39 +177,30 @@ export const QRCodeSection = ({ boxToken, boxTitle, className = "" }: QRCodeSect
       <div className="flex flex-col items-center gap-3 sm:gap-4 w-full">
         <div 
           ref={qrRef} 
-          className="bg-white p-3 sm:p-4 rounded-xl shadow-lg border-2 border-primary/20 w-fit mx-auto"
+          className="bg-white p-2 sm:p-3 rounded-xl shadow-lg border-2 border-primary/20 w-fit mx-auto"
         />
         
         {/* Title below QR */}
-        <p className="text-center font-bold text-base sm:text-lg px-4 text-foreground">
+        <p className="text-center font-bold text-sm sm:text-base px-4 text-foreground">
           {boxTitle}
         </p>
         
         {/* Descriptive text */}
-        <p className="text-center text-xs sm:text-sm text-muted-foreground px-4 sm:px-6 leading-relaxed max-w-sm">
+        <p className="text-center text-xs text-muted-foreground px-4 sm:px-6 leading-relaxed max-w-xs sm:max-w-sm">
           Scan this QR code to submit your complaint via <span className="font-semibold text-foreground">{boxTitle}</span> complaint box
         </p>
       </div>
 
       {/* Download Buttons */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full px-4 sm:px-0 max-w-sm">
+      <div className="flex flex-col gap-2 w-full px-4 sm:px-0 max-w-xs sm:max-w-sm">
         <Button
           onClick={handleDownloadPNG}
           variant="default"
-          className="flex-1 gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90"
+          className="w-full gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90"
           disabled={isGenerating}
         >
           <Download className="h-4 w-4" />
           {isGenerating ? "Generating..." : "Download PNG"}
-        </Button>
-        <Button
-          onClick={handleDownloadSVG}
-          variant="outline"
-          className="flex-1 gap-2"
-          disabled={isGenerating}
-        >
-          <Download className="h-4 w-4" />
-          Download SVG
         </Button>
       </div>
     </div>

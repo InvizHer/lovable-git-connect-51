@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import AdminHeader from "@/components/AdminHeader";
 import Footer from "@/components/Footer";
 import { QRCodeSection } from "@/components/QRCodeSection";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Select,
   SelectContent,
@@ -363,104 +363,106 @@ const ManageBox = () => {
                     </div>
                   </>
                 ) : (
-                  <motion.div 
-                    className="space-y-4"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-title">Title</Label>
-                      <Input
-                        id="edit-title"
-                        value={editTitle}
-                        onChange={(e) => setEditTitle(e.target.value)}
-                        className="text-xl sm:text-2xl font-bold bg-background/50"
-                        disabled={savingEdit}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-description">Description</Label>
-                      <Textarea
-                        id="edit-description"
-                        value={editDescription}
-                        onChange={(e) => setEditDescription(e.target.value)}
-                        className="bg-background/50 resize-none"
-                        rows={3}
-                        disabled={savingEdit}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="edit-category">Category</Label>
-                      <select
-                        id="edit-category"
-                        value={editCategory}
-                        onChange={(e) => {
-                          setEditCategory(e.target.value);
-                          if (e.target.value !== "Other") {
-                            setEditCustomCategory("");
-                          }
-                        }}
-                        disabled={savingEdit}
-                        className="flex h-10 w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        <option value="">Select a category</option>
-                        <optgroup label="Education">
-                          <option value="School">School</option>
-                          <option value="College">College</option>
-                          <option value="University">University</option>
-                          <option value="Examination Cell">Examination Cell</option>
-                          <option value="Admission Office">Admission Office</option>
-                          <option value="Library">Library</option>
-                          <option value="Laboratory">Laboratory</option>
-                          <option value="Sports Department">Sports Department</option>
-                          <option value="Accounts / Fees Department">Accounts / Fees Department</option>
-                          <option value="Hostel Office">Hostel Office</option>
-                        </optgroup>
-                        <optgroup label="Corporate / Office">
-                          <option value="HR">HR</option>
-                          <option value="Manager">Manager</option>
-                          <option value="IT Department">IT Department</option>
-                          <option value="Finance">Finance</option>
-                          <option value="Administration">Administration</option>
-                          <option value="Operations">Operations</option>
-                          <option value="Customer Support">Customer Support</option>
-                          <option value="Vendor Management">Vendor Management</option>
-                          <option value="Sales Team">Sales Team</option>
-                        </optgroup>
-                        <optgroup label="Hostel / PG">
-                          <option value="Warden">Warden</option>
-                          <option value="Mess">Mess</option>
-                          <option value="Security">Security</option>
-                          <option value="Maintenance">Maintenance</option>
-                          <option value="Electricity / Water">Electricity / Water</option>
-                          <option value="Cleanliness">Cleanliness</option>
-                          <option value="Room Issues">Room Issues</option>
-                        </optgroup>
-                        <optgroup label="Other">
-                          <option value="Other">Other (Custom)</option>
-                        </optgroup>
-                      </select>
-                    </div>
-                    {editCategory === "Other" && (
-                      <motion.div 
-                        className="space-y-2"
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                      >
-                        <Label htmlFor="edit-custom-category">Custom Category</Label>
+                  <AnimatePresence mode="wait">
+                    <motion.div 
+                      className="space-y-4"
+                      initial={{ opacity: 0, y: -10, height: 0 }}
+                      animate={{ opacity: 1, y: 0, height: "auto" }}
+                      exit={{ opacity: 0, y: -10, height: 0 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                    >
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-title">Title</Label>
                         <Input
-                          id="edit-custom-category"
-                          placeholder="Enter your custom category"
-                          value={editCustomCategory}
-                          onChange={(e) => setEditCustomCategory(e.target.value)}
-                          className="bg-background/50"
+                          id="edit-title"
+                          value={editTitle}
+                          onChange={(e) => setEditTitle(e.target.value)}
+                          className="text-xl sm:text-2xl font-bold bg-background/50"
                           disabled={savingEdit}
                         />
-                      </motion.div>
-                    )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-description">Description</Label>
+                        <Textarea
+                          id="edit-description"
+                          value={editDescription}
+                          onChange={(e) => setEditDescription(e.target.value)}
+                          className="bg-background/50 resize-none"
+                          rows={3}
+                          disabled={savingEdit}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="edit-category">Category</Label>
+                        <select
+                          id="edit-category"
+                          value={editCategory}
+                          onChange={(e) => {
+                            setEditCategory(e.target.value);
+                            if (e.target.value !== "Other") {
+                              setEditCustomCategory("");
+                            }
+                          }}
+                          disabled={savingEdit}
+                          className="flex h-10 w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="">Select a category</option>
+                          <option value="Service">Service</option>
+                          <option value="Product">Product</option>
+                          <option value="Facility">Facility</option>
+                          <option value="Staff">Staff</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                      {editCategory === "Other" && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="space-y-2"
+                        >
+                          <Label htmlFor="edit-custom-category">Custom Category</Label>
+                          <Input
+                            id="edit-custom-category"
+                            value={editCustomCategory}
+                            onChange={(e) => setEditCustomCategory(e.target.value)}
+                            className="bg-background/50"
+                            placeholder="Enter custom category"
+                            disabled={savingEdit}
+                          />
+                        </motion.div>
+                      )}
+                      <div className="flex gap-2 pt-2">
+                        <Button
+                          onClick={handleSaveEdit}
+                          disabled={savingEdit}
+                          className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
+                        >
+                          {savingEdit ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Saving...
+                            </>
+                          ) : (
+                            <>
+                              <Save className="w-4 h-4 mr-2" />
+                              Save Changes
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          onClick={() => setEditMode(false)}
+                          variant="outline"
+                          disabled={savingEdit}
+                          className="border-primary/30"
+                        >
+                          <X className="w-4 h-4 mr-2" />
+                          Cancel
+                        </Button>
+                      </div>
+                    </motion.div>
+                  </AnimatePresence>
+                )}
                     <div className="flex gap-2 pt-2">
                       <Button 
                         onClick={handleSaveEdit} 

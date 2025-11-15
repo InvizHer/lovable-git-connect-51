@@ -7,9 +7,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { 
-  Loader2, Copy, Trash2, ExternalLink, Search, Filter, Eye, Reply, 
+  Loader2, Copy, Trash2, Search, Filter, Eye, Reply, 
   Calendar, MessageSquare, Download, FileText, Image as ImageIcon, 
-  BarChart3, Edit, Save, X, ArrowUpDown, QrCode 
+  BarChart3, Edit, Save, X, ArrowUpDown, QrCode, MessageCircle
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import AdminHeader from "@/components/AdminHeader";
 import Footer from "@/components/Footer";
 import { QRCodeSection } from "@/components/QRCodeSection";
+import { motion } from "framer-motion";
 import {
   Select,
   SelectContent,
@@ -79,6 +80,8 @@ const ManageBox = () => {
   const [editMode, setEditMode] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [editCategory, setEditCategory] = useState("");
+  const [editCustomCategory, setEditCustomCategory] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
   
   // QR Code modal state
@@ -141,6 +144,8 @@ const ManageBox = () => {
     setBox(data);
     setEditTitle(data.title);
     setEditDescription(data.description || "");
+    setEditCategory((data as any).category || "");
+    setEditCustomCategory("");
     setLoading(false);
   };
 
@@ -165,13 +170,26 @@ const ManageBox = () => {
       return;
     }
 
+    if (!editCategory) {
+      toast.error("Category is required");
+      return;
+    }
+
+    const finalCategory = editCategory === "Other" ? editCustomCategory.trim() : editCategory;
+
+    if (editCategory === "Other" && !editCustomCategory.trim()) {
+      toast.error("Please enter a custom category");
+      return;
+    }
+
     setSavingEdit(true);
 
     const { error } = await supabase
       .from("complaint_boxes")
       .update({ 
         title: editTitle.trim(),
-        description: editDescription.trim() || null
+        description: editDescription.trim() || null,
+        category: finalCategory
       })
       .eq("id", id);
 
@@ -182,7 +200,7 @@ const ManageBox = () => {
     }
 
     toast.success("Complaint box updated successfully");
-    setBox({ ...box, title: editTitle.trim(), description: editDescription.trim() });
+    setBox({ ...box, title: editTitle.trim(), description: editDescription.trim(), category: finalCategory });
     setEditMode(false);
     setSavingEdit(false);
   };
@@ -320,76 +338,164 @@ const ManageBox = () => {
       <main className="flex-1 container mx-auto px-4 py-6 sm:py-8">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Box Details with Icon */}
-          <div className="animate-fade-in">
+          <motion.div 
+            className="animate-fade-in"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
             <Card className="glass-card border-primary/30 shadow-[var(--shadow-strong)]">
               <CardHeader>
-                <div className="flex flex-col gap-4">
-                  {editMode ? (
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-title">Title</Label>
-                        <Input
-                          id="edit-title"
-                          value={editTitle}
-                          onChange={(e) => setEditTitle(e.target.value)}
-                          className="text-xl sm:text-2xl font-bold bg-background/50"
-                          disabled={savingEdit}
-                        />
+                {!editMode ? (
+                  <>
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/30">
+                        <MessageCircle className="w-8 h-8 text-primary" />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="edit-description">Description</Label>
-                        <Textarea
-                          id="edit-description"
-                          value={editDescription}
-                          onChange={(e) => setEditDescription(e.target.value)}
-                          className="bg-background/50 resize-none"
-                          rows={3}
-                          disabled={savingEdit}
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <Button 
-                          onClick={handleSaveEdit} 
-                          disabled={savingEdit}
-                          className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
-                        >
-                          {savingEdit ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Saving...
-                            </>
-                          ) : (
-                            <>
-                              <Save className="w-4 h-4 mr-2" />
-                              Save Changes
-                            </>
-                          )}
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          onClick={() => {
-                            setEditMode(false);
-                            setEditTitle(box.title);
-                            setEditDescription(box.description || "");
-                          }}
-                          disabled={savingEdit}
-                        >
-                          <X className="w-4 h-4 mr-2" />
-                          Cancel
-                        </Button>
+                      <div className="flex-1">
+                        <CardTitle className="text-3xl sm:text-4xl gradient-text mb-2">
+                          {box.title}
+                        </CardTitle>
+                        <CardDescription className="text-base sm:text-lg">
+                          {box.description || "Submit your complaint anonymously"}
+                        </CardDescription>
                       </div>
                     </div>
-                  ) : (
-                    <>
-                      <CardTitle className="text-3xl sm:text-4xl gradient-text">
-                        {box.title}
-                      </CardTitle>
-                      <CardDescription className="text-base sm:text-lg">
-                        {box.description || "Submit your complaint anonymously"}
-                      </CardDescription>
-                    </>
-                  )}
-                </div>
+                  </>
+                ) : (
+                  <motion.div 
+                    className="space-y-4"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-title">Title</Label>
+                      <Input
+                        id="edit-title"
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        className="text-xl sm:text-2xl font-bold bg-background/50"
+                        disabled={savingEdit}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-description">Description</Label>
+                      <Textarea
+                        id="edit-description"
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
+                        className="bg-background/50 resize-none"
+                        rows={3}
+                        disabled={savingEdit}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-category">Category</Label>
+                      <select
+                        id="edit-category"
+                        value={editCategory}
+                        onChange={(e) => {
+                          setEditCategory(e.target.value);
+                          if (e.target.value !== "Other") {
+                            setEditCustomCategory("");
+                          }
+                        }}
+                        disabled={savingEdit}
+                        className="flex h-10 w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="">Select a category</option>
+                        <optgroup label="Education">
+                          <option value="School">School</option>
+                          <option value="College">College</option>
+                          <option value="University">University</option>
+                          <option value="Examination Cell">Examination Cell</option>
+                          <option value="Admission Office">Admission Office</option>
+                          <option value="Library">Library</option>
+                          <option value="Laboratory">Laboratory</option>
+                          <option value="Sports Department">Sports Department</option>
+                          <option value="Accounts / Fees Department">Accounts / Fees Department</option>
+                          <option value="Hostel Office">Hostel Office</option>
+                        </optgroup>
+                        <optgroup label="Corporate / Office">
+                          <option value="HR">HR</option>
+                          <option value="Manager">Manager</option>
+                          <option value="IT Department">IT Department</option>
+                          <option value="Finance">Finance</option>
+                          <option value="Administration">Administration</option>
+                          <option value="Operations">Operations</option>
+                          <option value="Customer Support">Customer Support</option>
+                          <option value="Vendor Management">Vendor Management</option>
+                          <option value="Sales Team">Sales Team</option>
+                        </optgroup>
+                        <optgroup label="Hostel / PG">
+                          <option value="Warden">Warden</option>
+                          <option value="Mess">Mess</option>
+                          <option value="Security">Security</option>
+                          <option value="Maintenance">Maintenance</option>
+                          <option value="Electricity / Water">Electricity / Water</option>
+                          <option value="Cleanliness">Cleanliness</option>
+                          <option value="Room Issues">Room Issues</option>
+                        </optgroup>
+                        <optgroup label="Other">
+                          <option value="Other">Other (Custom)</option>
+                        </optgroup>
+                      </select>
+                    </div>
+                    {editCategory === "Other" && (
+                      <motion.div 
+                        className="space-y-2"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                      >
+                        <Label htmlFor="edit-custom-category">Custom Category</Label>
+                        <Input
+                          id="edit-custom-category"
+                          placeholder="Enter your custom category"
+                          value={editCustomCategory}
+                          onChange={(e) => setEditCustomCategory(e.target.value)}
+                          className="bg-background/50"
+                          disabled={savingEdit}
+                        />
+                      </motion.div>
+                    )}
+                    <div className="flex gap-2 pt-2">
+                      <Button 
+                        onClick={handleSaveEdit} 
+                        disabled={savingEdit}
+                        className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
+                      >
+                        {savingEdit ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-4 h-4 mr-2" />
+                            Save Changes
+                          </>
+                        )}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          setEditMode(false);
+                          setEditTitle(box.title);
+                          setEditDescription(box.description || "");
+                          setEditCategory(box.category || "");
+                          setEditCustomCategory("");
+                        }}
+                        disabled={savingEdit}
+                      >
+                        <X className="w-4 h-4 mr-2" />
+                        Cancel
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Desktop Actions */}
@@ -401,26 +507,12 @@ const ManageBox = () => {
                       className="border-primary/30 hover:bg-primary/10"
                     >
                       <Edit className="w-4 h-4 mr-2" />
-                      Edit Box
+                      Edit
                     </Button>
                   )}
                   <Button onClick={copyLink} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
                     <Copy className="w-4 h-4 mr-2" />
-                    Copy Share Link
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setQrModalOpen(true)}
-                  >
-                    <QrCode className="w-4 h-4 mr-2" />
-                    Show QR Code
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => window.open(`/complaint/${box.token}`, "_blank")}
-                  >
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    Open Page
+                    Copy Link
                   </Button>
                   <Button
                     variant="outline"
@@ -428,6 +520,13 @@ const ManageBox = () => {
                   >
                     <BarChart3 className="w-4 h-4 mr-2" />
                     Analytics
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setQrModalOpen(true)}
+                  >
+                    <QrCode className="w-4 h-4 mr-2" />
+                    QR Code
                   </Button>
                 </div>
 
@@ -445,21 +544,7 @@ const ManageBox = () => {
                   )}
                   <Button onClick={copyLink} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
                     <Copy className="w-4 h-4 mr-2" />
-                    Copy Link
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setQrModalOpen(true)}
-                  >
-                    <QrCode className="w-4 h-4 mr-2" />
-                    QR Code
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => window.open(`/complaint/${box.token}`, "_blank")}
-                  >
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    Open
+                    Copy
                   </Button>
                   <Button
                     variant="outline"
@@ -468,6 +553,13 @@ const ManageBox = () => {
                     <BarChart3 className="w-4 h-4 mr-2" />
                     Stats
                   </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setQrModalOpen(true)}
+                  >
+                    <QrCode className="w-4 h-4 mr-2" />
+                    QR Code
+                  </Button>
                 </div>
 
                 <div className="text-sm text-muted-foreground bg-gradient-to-br from-primary/5 to-accent/5 p-4 rounded-xl border border-primary/10">
@@ -475,7 +567,7 @@ const ManageBox = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
+          </motion.div>
 
           {/* Search, Filter, and Sort */}
           <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
@@ -835,16 +927,14 @@ const ManageBox = () => {
 
       {/* QR Code Modal */}
       <Dialog open={qrModalOpen} onOpenChange={setQrModalOpen}>
-        <DialogContent className="glass-card border-primary/30 max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl sm:text-2xl gradient-text">QR Code</DialogTitle>
-            <DialogDescription>
-              Share this QR code to let users submit complaints easily
+        <DialogContent className="glass-card border-primary/30 max-w-[90vw] sm:max-w-md max-h-[95vh] overflow-y-auto p-4 sm:p-6">
+          <DialogHeader className="space-y-2 pb-2">
+            <DialogTitle className="text-xl sm:text-2xl gradient-text text-center">QR Code</DialogTitle>
+            <DialogDescription className="text-center text-xs sm:text-sm">
+              Share this QR code to let users submit complaints
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <QRCodeSection boxToken={box.token} boxTitle={box.title} className="border-0 shadow-none" />
-          </div>
+          <QRCodeSection boxToken={box.token} boxTitle={box.title} />
         </DialogContent>
       </Dialog>
     </div>

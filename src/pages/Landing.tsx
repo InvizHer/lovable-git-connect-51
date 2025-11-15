@@ -59,7 +59,7 @@ const Landing = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-background">
       <SEOHead 
         title="Anonymous Feedback Platform"
         description="A modern, secure platform for anonymous feedback and complaint management in educational institutions and organizations. Submit and track complaints anonymously."

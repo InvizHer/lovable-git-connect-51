@@ -9,8 +9,7 @@ import { toast } from "sonner";
 import { 
   Loader2, Copy, Trash2, Search, Filter, Eye, Reply, 
   Calendar, MessageSquare, Download, FileText, Image as ImageIcon, 
-  BarChart3, Edit, Save, X, ArrowUpDown, QrCode, MessageCircle,
-  User, Mail, Phone, Tag, Send
+  BarChart3, Edit, Save, X, ArrowUpDown, QrCode, MessageCircle
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -620,44 +619,25 @@ const ManageBox = () => {
             <div className="space-y-4 animate-fade-in">
               {filteredComplaints.map((complaint) => (
                 <Card key={complaint.id} className="glass-card border-primary/20 hover:shadow-[var(--shadow-strong)] hover:border-primary/40 transition-all duration-300">
-                  <CardContent className="p-4 sm:p-6">
-                    <div className="space-y-4">
-                      {/* Header with Category and ID */}
-                      <div className="flex items-start justify-between gap-3 flex-wrap">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Badge variant="secondary" className="font-mono text-xs">
-                            #{complaint.id.slice(0, 8)}
-                          </Badge>
-                          <Badge variant="outline" className="gap-1">
-                            <Tag className="h-3 w-3" />
-                            {complaint.complaint_category || "General"}
-                          </Badge>
+                    <CardHeader>
+                      <div className="flex flex-col sm:flex-row justify-between gap-3">
+                        <div className="space-y-2 flex-1 min-w-0">
+                          <CardTitle className="text-lg sm:text-xl break-words">{complaint.title}</CardTitle>
+                          <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                            <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+                            <span>{new Date(complaint.created_at).toLocaleString()}</span>
+                          </div>
                         </div>
-                        <Badge 
-                          variant={
-                            complaint.status === "resolved" 
-                              ? "default" 
-                              : complaint.status === "in_progress" 
-                              ? "secondary" 
-                              : "outline"
-                          }
-                          className="capitalize"
-                        >
-                          {complaint.status.replace("_", " ")}
-                        </Badge>
+                        <div className={`self-start px-4 py-2 rounded-full border text-sm font-semibold ${getStatusColor(complaint.status)}`}>
+                          {getStatusLabel(complaint.status)}
+                        </div>
                       </div>
-
-                      {/* Subject and Description */}
-                      <div className="space-y-2">
-                        <h3 className="font-semibold text-base sm:text-lg leading-tight break-words">
-                          {complaint.title}
-                        </h3>
-                        <p className="text-sm text-muted-foreground line-clamp-2 break-words leading-relaxed">
-                          {complaint.message}
-                        </p>
-                      </div>
-
-                      {/* Admin Reply if exists */}
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <p className="text-sm line-clamp-2 text-muted-foreground break-words">
+                        {complaint.message}
+                      </p>
+                      
                       {complaint.admin_reply && (
                         <div className="bg-gradient-to-br from-primary/5 to-accent/5 p-3 rounded-lg border border-primary/10 space-y-1">
                           <p className="text-xs font-semibold text-primary">Admin Reply:</p>
@@ -668,88 +648,106 @@ const ManageBox = () => {
                         </div>
                       )}
 
-                      {/* Submitted Date */}
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2 border-t border-border/50">
-                        <Calendar className="h-4 w-4 shrink-0" />
-                        <span className="truncate">
-                          Submitted {new Date(complaint.created_at).toLocaleDateString()} at {new Date(complaint.created_at).toLocaleTimeString()}
-                        </span>
+                      {/* Desktop Actions */}
+                      <div className="hidden sm:flex flex-wrap gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewComplaint(complaint)}
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          View Full
+                        </Button>
+                        <Select
+                          value={complaint.status}
+                          onValueChange={(value) =>
+                            handleStatusUpdate(complaint.id, value)
+                          }
+                        >
+                          <SelectTrigger className="w-[160px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="received">Received</SelectItem>
+                            <SelectItem value="under_review">Under Review</SelectItem>
+                            <SelectItem value="solved">Solved</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleReplyClick(complaint)}
+                        >
+                          <Reply className="w-4 h-4 mr-2" />
+                          Reply
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => {
+                            setComplaintToDelete(complaint.id);
+                            setDeleteDialogOpen(true);
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete
+                        </Button>
                       </div>
 
-                      {/* Action Buttons */}
-                      <div className="flex flex-col gap-2 pt-2">
-                        {/* Primary Actions Row */}
-                        <div className="flex flex-wrap gap-2">
+                      {/* Mobile Actions */}
+                      <div className="sm:hidden space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleViewComplaint(complaint)}
-                            className="flex-1 sm:flex-initial"
                           >
-                            <Eye className="h-4 w-4 sm:mr-2" />
-                            <span className="hidden sm:inline">View Details</span>
+                            <Eye className="w-4 h-4 mr-2" />
+                            View
                           </Button>
                           <Button
-                            variant="outline"
+                            variant="secondary"
                             size="sm"
                             onClick={() => handleReplyClick(complaint)}
-                            className="flex-1 sm:flex-initial"
                           >
-                            <MessageSquare className="h-4 w-4 sm:mr-2" />
-                            <span className="hidden sm:inline">Reply</span>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setComplaintToDelete(complaint.id);
-                              setDeleteDialogOpen(true);
-                            }}
-                            className="flex-1 sm:flex-initial text-destructive hover:bg-destructive/10"
-                          >
-                            <Trash2 className="h-4 w-4 sm:mr-2" />
-                            <span className="hidden sm:inline">Delete</span>
+                            <Reply className="w-4 h-4 mr-2" />
+                            Reply
                           </Button>
                         </div>
-
-                        {/* Status Update Select */}
                         <Select
                           value={complaint.status}
-                          onValueChange={(value) => handleStatusUpdate(complaint.id, value)}
+                          onValueChange={(value) =>
+                            handleStatusUpdate(complaint.id, value)
+                          }
                         >
                           <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Update Status" />
+                            <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="pending">
-                              <div className="flex items-center gap-2">
-                                <div className="h-2 w-2 rounded-full bg-yellow-500" />
-                                Pending
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="in_progress">
-                              <div className="flex items-center gap-2">
-                                <div className="h-2 w-2 rounded-full bg-blue-500" />
-                                In Progress
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="resolved">
-                              <div className="flex items-center gap-2">
-                                <div className="h-2 w-2 rounded-full bg-green-500" />
-                                Resolved
-                              </div>
-                            </SelectItem>
+                            <SelectItem value="received">Received</SelectItem>
+                            <SelectItem value="under_review">Under Review</SelectItem>
+                            <SelectItem value="solved">Solved</SelectItem>
                           </SelectContent>
                         </Select>
-
-                        {/* Token */}
-                        <div className="text-xs text-muted-foreground break-all pt-2 border-t border-border/50">
-                          Token: {complaint.token}
-                        </div>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => {
+                            setComplaintToDelete(complaint.id);
+                            setDeleteDialogOpen(true);
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete
+                        </Button>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
+
+                      <div className="text-xs text-muted-foreground break-all pt-2 border-t">
+                        Token: {complaint.token}
+                      </div>
+                    </CardContent>
+                  </Card>
               ))}
             </div>
           )}
@@ -760,178 +758,124 @@ const ManageBox = () => {
 
       {/* View Complaint Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto glass-card border-primary/30">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto glass-card border-primary/30 p-4 sm:p-6">
           <DialogHeader>
-            <div className="flex items-start justify-between gap-4 flex-wrap">
-              <div className="flex-1 min-w-0 space-y-2">
-                <DialogTitle className="text-lg sm:text-xl break-words">
-                  {selectedComplaint?.title}
-                </DialogTitle>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Badge variant="secondary" className="font-mono text-xs">
-                    #{selectedComplaint?.id.slice(0, 8)}
-                  </Badge>
-                  <Badge variant="outline" className="gap-1 text-xs">
-                    <Tag className="h-3 w-3" />
-                    {selectedComplaint?.complaint_category || "General"}
-                  </Badge>
-                  <Badge 
-                    variant={
-                      selectedComplaint?.status === "resolved" 
-                        ? "default" 
-                        : selectedComplaint?.status === "in_progress" 
-                        ? "secondary" 
-                        : "outline"
-                    }
-                    className="capitalize text-xs"
-                  >
-                    {selectedComplaint?.status.replace("_", " ")}
-                  </Badge>
-                </div>
+            <DialogTitle className="text-xl sm:text-2xl break-words gradient-text">
+              {selectedComplaint?.title}
+            </DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm">
+              Submitted on {selectedComplaint && new Date(selectedComplaint.created_at).toLocaleString()}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-sm font-semibold">Category:</Label>
+              <div className="mt-1">
+                <span className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-sm">
+                  {selectedComplaint?.complaint_category}
+                </span>
               </div>
             </div>
-          </DialogHeader>
-          
-          <div className="space-y-6 mt-4">
-            {/* Description */}
-            <div className="space-y-2">
-              <h4 className="font-semibold text-sm flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Description
-              </h4>
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words leading-relaxed bg-muted/30 rounded-lg p-4">
-                {selectedComplaint?.message}
-              </p>
-            </div>
 
-            {/* Contact Info - Responsive Grid */}
-            <div className="rounded-lg border bg-muted/30 p-4">
-              <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Contact Information
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                <div className="space-y-1">
-                  <span className="text-muted-foreground text-xs">Submitted On</span>
-                  <p className="font-medium break-words">
-                    {selectedComplaint?.created_at &&
-                      new Date(selectedComplaint.created_at).toLocaleString()}
+            <div>
+              <Label className="text-sm font-semibold">Complaint Message:</Label>
+              <div className="mt-2 p-4 bg-secondary/50 rounded-lg border border-border">
+                <p className="text-sm whitespace-pre-wrap break-words">{selectedComplaint?.message}</p>
+              </div>
+            </div>
+            
+            {selectedComplaint?.admin_reply && (
+              <div>
+                <Label className="text-sm font-semibold text-primary">Admin Reply:</Label>
+                <div className="mt-2 p-4 bg-gradient-to-br from-primary/10 to-accent/10 rounded-lg border border-primary/20">
+                  <p className="text-sm whitespace-pre-wrap break-words">{selectedComplaint.admin_reply}</p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Replied on {new Date(selectedComplaint.replied_at!).toLocaleString()}
                   </p>
                 </div>
-                <div className="space-y-1">
-                  <span className="text-muted-foreground text-xs">Token</span>
-                  <p className="font-mono text-xs break-all">{selectedComplaint?.token}</p>
+              </div>
+            )}
+
+            {selectedComplaint?.attachment_url && (
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold">Attachment:</Label>
+                <div className="p-3 sm:p-4 bg-secondary/50 rounded-lg border border-border space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      {selectedComplaint.attachment_type?.startsWith("image/") ? (
+                        <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+                      ) : (
+                        <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+                      )}
+                      <span className="text-xs sm:text-sm font-medium truncate">{selectedComplaint.attachment_name}</span>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => window.open(selectedComplaint.attachment_url!, "_blank")}
+                      className="w-full sm:w-auto"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download
+                    </Button>
+                  </div>
+                  {selectedComplaint.attachment_type?.startsWith("image/") && (
+                    <div className="relative w-full bg-muted rounded-lg overflow-hidden">
+                      <img
+                        src={selectedComplaint.attachment_url}
+                        alt="Attachment Preview"
+                        className="w-full h-auto object-contain max-h-[50vh] sm:max-h-96"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
+            )}
+
+            <div className="pt-2 border-t">
+              <p className="text-xs text-muted-foreground break-all">
+                <strong>Token:</strong> {selectedComplaint?.token}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+                <strong>Status:</strong> 
+                <span className={`px-3 py-1 rounded-full border text-xs font-semibold ${getStatusColor(selectedComplaint?.status || "")}`}>
+                  {getStatusLabel(selectedComplaint?.status || "")}
+                </span>
+              </p>
             </div>
-
-            {/* Admin Reply if exists */}
-            {selectedComplaint?.admin_reply && (
-              <div className="bg-gradient-to-br from-primary/5 to-accent/5 p-4 rounded-lg border border-primary/10 space-y-2">
-                <h4 className="font-semibold text-sm flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4" />
-                  Admin Reply
-                </h4>
-                <p className="text-sm break-words leading-relaxed">{selectedComplaint.admin_reply}</p>
-                <p className="text-xs text-muted-foreground">
-                  Replied on {new Date(selectedComplaint.replied_at!).toLocaleString()}
-                </p>
-              </div>
-            )}
-
-            {/* Attachment */}
-            {selectedComplaint?.attachment_url && (
-              <div className="space-y-2">
-                <h4 className="font-semibold text-sm flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Attachment
-                  {selectedComplaint.attachment_name && (
-                    <span className="text-xs text-muted-foreground font-normal truncate max-w-[200px]">
-                      ({selectedComplaint.attachment_name})
-                    </span>
-                  )}
-                </h4>
-                {selectedComplaint.attachment_url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-                  <div className="rounded-lg border bg-muted/30 p-2 sm:p-4">
-                    <img
-                      src={selectedComplaint.attachment_url}
-                      alt="Attachment"
-                      className="w-full h-auto rounded-lg max-h-[40vh] sm:max-h-[50vh] object-contain"
-                    />
-                  </div>
-                ) : (
-                  <Button
-                    variant="outline"
-                    className="w-full sm:w-auto"
-                    onClick={() => window.open(selectedComplaint.attachment_url, '_blank')}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download Attachment
-                  </Button>
-                )}
-              </div>
-            )}
           </div>
         </DialogContent>
       </Dialog>
 
       {/* Reply Dialog */}
       <Dialog open={replyDialogOpen} onOpenChange={setReplyDialogOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-lg glass-card border-primary/30">
+        <DialogContent className="max-w-2xl glass-card border-primary/30">
           <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl">Reply to Complaint</DialogTitle>
-            <DialogDescription className="break-words text-xs sm:text-sm">
+            <DialogTitle className="break-words gradient-text">Reply to Complaint</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm break-words">
               {selectedComplaint?.title}
             </DialogDescription>
           </DialogHeader>
-          
-          <div className="space-y-4 mt-2">
-            {/* Complaint Preview */}
-            <div className="rounded-lg border bg-muted/30 p-3 sm:p-4 space-y-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="secondary" className="font-mono text-xs">
-                  #{selectedComplaint?.id.slice(0, 8)}
-                </Badge>
-                <Badge variant="outline" className="gap-1 text-xs">
-                  <Tag className="h-3 w-3" />
-                  {selectedComplaint?.complaint_category || "General"}
-                </Badge>
-              </div>
-              <p className="text-xs sm:text-sm text-muted-foreground line-clamp-3 break-words mt-2 leading-relaxed">
-                {selectedComplaint?.message}
-              </p>
-            </div>
-
-            {/* Reply Input */}
-            <div className="space-y-2">
-              <Label htmlFor="reply" className="text-sm">Your Reply</Label>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="reply">Your Reply</Label>
               <Textarea
                 id="reply"
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
                 placeholder="Type your reply here..."
                 rows={6}
-                className="resize-none bg-background/50 text-sm"
+                className="mt-2 resize-none bg-background/50"
               />
-              <p className="text-xs text-muted-foreground">
-                Your reply will be saved with the complaint
-              </p>
             </div>
-
-            {/* Actions */}
-            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
-              <Button 
-                variant="outline" 
-                onClick={() => setReplyDialogOpen(false)}
-                disabled={submittingReply}
-                className="w-full sm:w-auto"
-              >
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setReplyDialogOpen(false)} disabled={submittingReply}>
                 Cancel
               </Button>
               <Button 
                 onClick={handleSubmitReply} 
                 disabled={submittingReply}
-                className="w-full sm:w-auto bg-gradient-to-r from-primary to-accent hover:opacity-90"
+                className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
               >
                 {submittingReply ? (
                   <>
@@ -939,10 +883,7 @@ const ManageBox = () => {
                     Submitting...
                   </>
                 ) : (
-                  <>
-                    <Send className="w-4 h-4 mr-2" />
-                    Submit Reply
-                  </>
+                  "Submit Reply"
                 )}
               </Button>
             </div>

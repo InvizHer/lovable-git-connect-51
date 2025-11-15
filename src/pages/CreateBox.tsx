@@ -20,6 +20,8 @@ const CreateBox = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [password, setPassword] = useState("");
+  const [category, setCategory] = useState("");
+  const [customCategory, setCustomCategory] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -56,6 +58,16 @@ const CreateBox = () => {
       return;
     }
 
+    if (!category) {
+      toast.error("Please select a category");
+      return;
+    }
+
+    if (category === "Other" && !customCategory) {
+      toast.error("Please enter a custom category");
+      return;
+    }
+
     if (!user) {
       toast.error("You must be logged in to create a complaint box");
       return;
@@ -65,6 +77,7 @@ const CreateBox = () => {
     
     try {
       const token = generateToken();
+      const finalCategory = category === "Other" ? customCategory : category;
       
       const { data, error } = await supabase
         .from("complaint_boxes")
@@ -73,6 +86,7 @@ const CreateBox = () => {
             admin_id: user.id,
             title,
             description: description || null,
+            category: finalCategory,
             password: password || null,
             token,
           },
@@ -175,6 +189,78 @@ const CreateBox = () => {
                       className="text-base resize-none"
                     />
                   </motion.div>
+
+                  <motion.div 
+                    className="space-y-2"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.45 }}
+                  >
+                    <Label htmlFor="category" className="text-base flex items-center gap-2">
+                      Category <span className="text-destructive">*</span>
+                    </Label>
+                    <select
+                      id="category"
+                      value={category}
+                      onChange={(e) => {
+                        setCategory(e.target.value);
+                        if (e.target.value !== "Other") {
+                          setCustomCategory("");
+                        }
+                      }}
+                      disabled={loading}
+                      required
+                      className="flex h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="">Select category...</option>
+                      <optgroup label="Education">
+                        <option value="School">School</option>
+                        <option value="College">College</option>
+                        <option value="University">University</option>
+                      </optgroup>
+                      <optgroup label="Corporate / Office">
+                        <option value="HR">HR</option>
+                        <option value="Manager">Manager</option>
+                        <option value="IT Department">IT Department</option>
+                        <option value="Finance">Finance</option>
+                      </optgroup>
+                      <optgroup label="Hostel / PG">
+                        <option value="Warden">Warden</option>
+                        <option value="Mess">Mess</option>
+                        <option value="Security">Security</option>
+                        <option value="Maintenance">Maintenance</option>
+                      </optgroup>
+                      <optgroup label="General">
+                        <option value="Public Service">Public Service</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Customer Support">Customer Support</option>
+                      </optgroup>
+                      <option value="Other">Other (Custom)</option>
+                    </select>
+                  </motion.div>
+
+                  {category === "Other" && (
+                    <motion.div 
+                      className="space-y-2"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Label htmlFor="customCategory" className="text-base flex items-center gap-2">
+                        Custom Category <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="customCategory"
+                        placeholder="Enter your custom category..."
+                        value={customCategory}
+                        onChange={(e) => setCustomCategory(e.target.value)}
+                        disabled={loading}
+                        required
+                        className="text-base h-12"
+                      />
+                    </motion.div>
+                  )}
 
                   <motion.div 
                     className="space-y-2"

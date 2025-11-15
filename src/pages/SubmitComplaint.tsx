@@ -32,6 +32,8 @@ const SubmitComplaint = () => {
   const [complaintToken, setComplaintToken] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(false);
+  const [complaintCategory, setComplaintCategory] = useState("");
+  const [customComplaintCategory, setCustomComplaintCategory] = useState("");
 
   useEffect(() => {
     fetchBox();
@@ -68,6 +70,26 @@ const SubmitComplaint = () => {
 
   const generateComplaintToken = () => {
     return "CPL-" + Math.random().toString(36).substring(2, 12).toUpperCase();
+  };
+
+  const getComplaintCategories = (boxCategory: string) => {
+    const educationCategories = ["Teacher Issue", "Facility Problem", "Academic Issue", "Bullying", "Harassment", "Misconduct", "Other"];
+    const corporateCategories = ["Salary Issue", "Misbehavior", "Attendance / Leave Issue", "Workplace Harassment", "Administrative Issue", "Other"];
+    const hostelCategories = ["Room Issue", "Mess / Food Issue", "Warden Behaviour", "Electricity / Water", "Cleanliness", "Other"];
+    const generalCategories = ["Service Issue", "Staff Behaviour", "Delay Issue", "Mismanagement", "Other"];
+
+    if (["School", "College", "University"].includes(boxCategory)) {
+      return educationCategories;
+    } else if (["HR", "Manager", "IT Department", "Finance"].includes(boxCategory)) {
+      return corporateCategories;
+    } else if (["Warden", "Mess", "Security", "Maintenance"].includes(boxCategory)) {
+      return hostelCategories;
+    } else if (["Public Service", "Healthcare", "Customer Support"].includes(boxCategory)) {
+      return generalCategories;
+    } else {
+      // For "Other" or custom categories, return empty array (will show text input)
+      return [];
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -109,11 +131,22 @@ const SubmitComplaint = () => {
       return;
     }
 
+    if (!complaintCategory) {
+      toast.error("Please select a complaint category");
+      return;
+    }
+
+    if (complaintCategory === "Other" && !customComplaintCategory) {
+      toast.error("Please specify the complaint category");
+      return;
+    }
+
     setSubmitting(true);
     setUploadProgress(true);
     
     try {
       const newToken = generateComplaintToken();
+      const finalComplaintCategory = complaintCategory === "Other" ? customComplaintCategory : complaintCategory;
       
       let attachmentUrl = null;
       let attachmentName = null;
@@ -152,6 +185,7 @@ const SubmitComplaint = () => {
             box_id: box.id,
             title,
             message,
+            complaint_category: finalComplaintCategory,
             token: newToken,
             status: "received",
             attachment_url: attachmentUrl,
@@ -177,6 +211,8 @@ const SubmitComplaint = () => {
       setTitle("");
       setMessage("");
       setFile(null);
+      setComplaintCategory("");
+      setCustomComplaintCategory("");
     } catch (error: any) {
       toast.error(error.message || "An error occurred");
     } finally {
@@ -265,6 +301,55 @@ const SubmitComplaint = () => {
                     disabled={submitting}
                     required
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="complaintCategory">
+                    Complaint Category <span className="text-destructive">*</span>
+                  </Label>
+                  {getComplaintCategories(box.category).length > 0 ? (
+                    <>
+                      <select
+                        id="complaintCategory"
+                        value={complaintCategory}
+                        onChange={(e) => {
+                          setComplaintCategory(e.target.value);
+                          if (e.target.value !== "Other") {
+                            setCustomComplaintCategory("");
+                          }
+                        }}
+                        disabled={submitting}
+                        required
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="">Select category...</option>
+                        {getComplaintCategories(box.category).map((cat) => (
+                          <option key={cat} value={cat}>
+                            {cat}
+                          </option>
+                        ))}
+                      </select>
+                      {complaintCategory === "Other" && (
+                        <Input
+                          placeholder="Specify complaint category..."
+                          value={customComplaintCategory}
+                          onChange={(e) => setCustomComplaintCategory(e.target.value)}
+                          disabled={submitting}
+                          required
+                          className="mt-2"
+                        />
+                      )}
+                    </>
+                  ) : (
+                    <Input
+                      id="complaintCategory"
+                      placeholder="Enter complaint category..."
+                      value={complaintCategory}
+                      onChange={(e) => setComplaintCategory(e.target.value)}
+                      disabled={submitting}
+                      required
+                    />
+                  )}
                 </div>
 
                 <div className="space-y-2">

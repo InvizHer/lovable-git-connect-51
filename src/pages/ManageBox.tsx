@@ -45,6 +45,7 @@ interface Complaint {
   id: string;
   title: string;
   message: string;
+  complaint_category?: string;
   status: string;
   token: string;
   created_at: string;
@@ -682,6 +683,15 @@ const ManageBox = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            <div>
+              <Label className="text-sm font-semibold">Category:</Label>
+              <div className="mt-1">
+                <span className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-sm">
+                  {selectedComplaint?.complaint_category}
+                </span>
+              </div>
+            </div>
+
             <div>
               <Label className="text-sm font-semibold">Complaint Message:</Label>
               <div className="mt-2 p-4 bg-secondary/50 rounded-lg border border-border">

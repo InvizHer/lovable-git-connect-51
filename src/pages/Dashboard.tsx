@@ -27,6 +27,7 @@ interface ComplaintBox {
   id: string;
   title: string;
   description: string | null;
+  category?: string;
   token: string;
   created_at: string;
   complaint_count?: number;
@@ -345,6 +346,13 @@ const Dashboard = () => {
                             <CardTitle className="text-xl break-words line-clamp-2 group-hover:text-primary transition-colors mb-2">
                               {box.title}
                             </CardTitle>
+                            {box.category && (
+                              <div className="mb-2">
+                                <span className="inline-flex items-center px-2 py-1 rounded-full bg-accent/20 text-accent text-xs font-medium border border-accent/30">
+                                  {box.category}
+                                </span>
+                              </div>
+                            )}
                             <CardDescription className="text-sm break-words line-clamp-2">
                               {box.description || "No description"}
                             </CardDescription>

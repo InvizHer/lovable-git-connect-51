@@ -21,10 +21,14 @@ export const QRCodeSection = ({ boxToken, boxTitle, className = "" }: QRCodeSect
   useEffect(() => {
     if (!qrRef.current) return;
 
+    // Determine QR size based on viewport
+    const isMobile = window.innerWidth < 640;
+    const qrSize = isMobile ? 250 : 300;
+
     // Create QR code instance with TellUs branding
     qrCodeInstance.current = new QRCodeStyling({
-      width: 300,
-      height: 300,
+      width: qrSize,
+      height: qrSize,
       type: "canvas",
       data: complaintUrl,
       image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='100' cy='100' r='100' fill='white'/%3E%3Ctext x='100' y='115' text-anchor='middle' font-family='system-ui, -apple-system, sans-serif' font-size='40' font-weight='bold' fill='%2309090b'%3ETellUs%3C/text%3E%3C/svg%3E",
@@ -70,7 +74,7 @@ export const QRCodeSection = ({ boxToken, boxTitle, className = "" }: QRCodeSect
         throw new Error("Canvas not found");
       }
 
-      // Create a new canvas with extra space for title
+      // Create a new canvas with extra space for title and description
       const finalCanvas = document.createElement("canvas");
       const ctx = finalCanvas.getContext("2d");
       
@@ -79,9 +83,10 @@ export const QRCodeSection = ({ boxToken, boxTitle, className = "" }: QRCodeSect
       }
 
       const padding = 40;
-      const titleHeight = 80;
+      const titleHeight = 50;
+      const descHeight = 60;
       finalCanvas.width = canvas.width + (padding * 2);
-      finalCanvas.height = canvas.height + titleHeight + (padding * 2);
+      finalCanvas.height = canvas.height + titleHeight + descHeight + (padding * 2);
 
       // Fill background
       ctx.fillStyle = "#ffffff";
@@ -92,12 +97,36 @@ export const QRCodeSection = ({ boxToken, boxTitle, className = "" }: QRCodeSect
 
       // Draw title
       ctx.fillStyle = "#09090b";
-      ctx.font = "bold 20px system-ui, -apple-system, sans-serif";
+      ctx.font = "bold 18px system-ui, -apple-system, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       
-      const textY = canvas.height + padding + (titleHeight / 2);
-      ctx.fillText(boxTitle, finalCanvas.width / 2, textY);
+      const titleY = canvas.height + padding + 25;
+      ctx.fillText(boxTitle, finalCanvas.width / 2, titleY);
+
+      // Draw description text
+      ctx.fillStyle = "#6b7280";
+      ctx.font = "12px system-ui, -apple-system, sans-serif";
+      
+      const descText = `Scan this QR code to submit your complaint via ${boxTitle} complaint box`;
+      const maxWidth = finalCanvas.width - (padding * 2);
+      const words = descText.split(' ');
+      let line = '';
+      let lineY = titleY + 30;
+      
+      for (let i = 0; i < words.length; i++) {
+        const testLine = line + words[i] + ' ';
+        const metrics = ctx.measureText(testLine);
+        
+        if (metrics.width > maxWidth && i > 0) {
+          ctx.fillText(line, finalCanvas.width / 2, lineY);
+          line = words[i] + ' ';
+          lineY += 18;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, finalCanvas.width / 2, lineY);
 
       // Download
       finalCanvas.toBlob((blob) => {
@@ -156,16 +185,20 @@ export const QRCodeSection = ({ boxToken, boxTitle, className = "" }: QRCodeSect
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-6">
         {/* QR Code */}
-        <div className="flex flex-col items-center gap-4 p-6 bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/10 rounded-xl shadow-sm">
+        <div className="flex flex-col items-center gap-4 p-4 sm:p-6 bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/10 rounded-xl shadow-sm">
           <div 
             ref={qrRef} 
-            className="bg-white p-4 rounded-lg shadow-inner"
-            style={{ minHeight: "300px", minWidth: "300px" }}
+            className="bg-white p-3 sm:p-4 rounded-lg shadow-inner w-[250px] h-[250px] sm:w-[300px] sm:h-[300px] flex items-center justify-center"
           />
           
           {/* Title below QR */}
-          <p className="text-center font-semibold text-base mt-2 px-4 text-foreground">
+          <p className="text-center font-semibold text-sm sm:text-base mt-2 px-4 text-foreground">
             {boxTitle}
+          </p>
+          
+          {/* Descriptive text */}
+          <p className="text-center text-xs sm:text-sm text-muted-foreground px-2 sm:px-4 leading-relaxed">
+            Scan this QR code to submit your complaint via <span className="font-medium text-foreground">{boxTitle}</span> complaint box
           </p>
         </div>
 

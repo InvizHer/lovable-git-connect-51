@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { 
   Loader2, Copy, Trash2, ExternalLink, Search, Filter, Eye, Reply, 
   Calendar, MessageSquare, Download, FileText, Image as ImageIcon, 
-  BarChart3, Edit, Save, X, ArrowUpDown 
+  BarChart3, Edit, Save, X, ArrowUpDown, QrCode 
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -80,6 +80,9 @@ const ManageBox = () => {
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
+  
+  // QR Code modal state
+  const [qrModalOpen, setQrModalOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -377,25 +380,14 @@ const ManageBox = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="p-6 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20">
-                      <div className="flex items-start gap-4">
-                        <div className="p-3 rounded-xl bg-gradient-to-br from-primary to-accent flex-shrink-0">
-                          <MessageSquare className="h-8 w-8 text-white" />
-                        </div>
-                        <div className="flex-1 min-w-0 space-y-3">
-                          <CardTitle className="text-2xl sm:text-3xl lg:text-4xl break-words text-foreground">
-                            {box.title}
-                          </CardTitle>
-                          <CardDescription className="text-base sm:text-lg break-words text-foreground/80">
-                            {box.description || "No description"}
-                          </CardDescription>
-                          <div className="flex items-center gap-2 text-sm text-foreground/70">
-                            <Calendar className="h-4 w-4" />
-                            <span>Created {new Date(box.created_at).toLocaleDateString()}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <>
+                      <CardTitle className="text-3xl sm:text-4xl gradient-text">
+                        {box.title}
+                      </CardTitle>
+                      <CardDescription className="text-base sm:text-lg">
+                        {box.description || "Submit your complaint anonymously"}
+                      </CardDescription>
+                    </>
                   )}
                 </div>
               </CardHeader>
@@ -415,6 +407,13 @@ const ManageBox = () => {
                   <Button onClick={copyLink} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
                     <Copy className="w-4 h-4 mr-2" />
                     Copy Share Link
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setQrModalOpen(true)}
+                  >
+                    <QrCode className="w-4 h-4 mr-2" />
+                    Show QR Code
                   </Button>
                   <Button
                     variant="outline"
@@ -450,6 +449,13 @@ const ManageBox = () => {
                   </Button>
                   <Button
                     variant="outline"
+                    onClick={() => setQrModalOpen(true)}
+                  >
+                    <QrCode className="w-4 h-4 mr-2" />
+                    QR Code
+                  </Button>
+                  <Button
+                    variant="outline"
                     onClick={() => window.open(`/complaint/${box.token}`, "_blank")}
                   >
                     <ExternalLink className="w-4 h-4 mr-2" />
@@ -469,11 +475,6 @@ const ManageBox = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
-
-          {/* QR Code Section */}
-          <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
-            <QRCodeSection boxToken={box.token} boxTitle={box.title} />
           </div>
 
           {/* Search, Filter, and Sort */}
@@ -831,6 +832,21 @@ const ManageBox = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* QR Code Modal */}
+      <Dialog open={qrModalOpen} onOpenChange={setQrModalOpen}>
+        <DialogContent className="glass-card border-primary/30 max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl sm:text-2xl gradient-text">QR Code</DialogTitle>
+            <DialogDescription>
+              Share this QR code to let users submit complaints easily
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <QRCodeSection boxToken={box.token} boxTitle={box.title} className="border-0 shadow-none" />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

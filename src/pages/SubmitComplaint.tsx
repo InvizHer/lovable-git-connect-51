@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { getComplaintCategories } from "@/utils/categoryMapping";
 
 const SubmitComplaint = () => {
   const { token } = useParams<{ token: string }>();
@@ -72,24 +73,9 @@ const SubmitComplaint = () => {
     return "CPL-" + Math.random().toString(36).substring(2, 12).toUpperCase();
   };
 
-  const getComplaintCategories = (boxCategory: string) => {
-    const educationCategories = ["Teacher Issue", "Facility Problem", "Academic Issue", "Bullying", "Harassment", "Misconduct", "Other"];
-    const corporateCategories = ["Salary Issue", "Misbehavior", "Attendance / Leave Issue", "Workplace Harassment", "Administrative Issue", "Other"];
-    const hostelCategories = ["Room Issue", "Mess / Food Issue", "Warden Behaviour", "Electricity / Water", "Cleanliness", "Other"];
-    const generalCategories = ["Service Issue", "Staff Behaviour", "Delay Issue", "Mismanagement", "Other"];
-
-    if (["School", "College", "University"].includes(boxCategory)) {
-      return educationCategories;
-    } else if (["HR", "Manager", "IT Department", "Finance"].includes(boxCategory)) {
-      return corporateCategories;
-    } else if (["Warden", "Mess", "Security", "Maintenance"].includes(boxCategory)) {
-      return hostelCategories;
-    } else if (["Public Service", "Healthcare", "Customer Support"].includes(boxCategory)) {
-      return generalCategories;
-    } else {
-      // For "Other" or custom categories, return empty array (will show text input)
-      return [];
-    }
+  const getCategoryOptions = () => {
+    if (!box) return [];
+    return getComplaintCategories(box.category);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -304,10 +290,10 @@ const SubmitComplaint = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="complaintCategory">
+                  <Label htmlFor="complaintCategory" className="text-base flex items-center gap-2">
                     Complaint Category <span className="text-destructive">*</span>
                   </Label>
-                  {getComplaintCategories(box.category).length > 0 ? (
+                  {getCategoryOptions().length > 0 ? (
                     <>
                       <select
                         id="complaintCategory"
@@ -320,24 +306,29 @@ const SubmitComplaint = () => {
                         }}
                         disabled={submitting}
                         required
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex h-12 w-full rounded-lg border-2 border-input bg-background px-4 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200 hover:border-primary/50"
                       >
-                        <option value="">Select category...</option>
-                        {getComplaintCategories(box.category).map((cat) => (
-                          <option key={cat} value={cat}>
-                            {cat}
-                          </option>
+                        <option value="" className="text-muted-foreground">Select complaint category...</option>
+                        {getCategoryOptions().map((cat) => (
+                          <option key={cat} value={cat}>{cat}</option>
                         ))}
                       </select>
                       {complaintCategory === "Other" && (
-                        <Input
-                          placeholder="Specify complaint category..."
-                          value={customComplaintCategory}
-                          onChange={(e) => setCustomComplaintCategory(e.target.value)}
-                          disabled={submitting}
-                          required
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
                           className="mt-2"
-                        />
+                        >
+                          <Input
+                            placeholder="Please specify your complaint category..."
+                            value={customComplaintCategory}
+                            onChange={(e) => setCustomComplaintCategory(e.target.value)}
+                            disabled={submitting}
+                            required
+                            className="text-base h-12 rounded-lg border-2 focus-visible:border-primary transition-all duration-200"
+                          />
+                        </motion.div>
                       )}
                     </>
                   ) : (
@@ -348,6 +339,7 @@ const SubmitComplaint = () => {
                       onChange={(e) => setComplaintCategory(e.target.value)}
                       disabled={submitting}
                       required
+                      className="text-base h-12 rounded-lg border-2 focus-visible:border-primary transition-all duration-200"
                     />
                   )}
                 </div>

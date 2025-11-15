@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import AdminHeader from "@/components/AdminHeader";
 import Footer from "@/components/Footer";
+import { QRCodeSection } from "@/components/QRCodeSection";
 import {
   Select,
   SelectContent,
@@ -470,8 +471,13 @@ const ManageBox = () => {
             </Card>
           </div>
 
+          {/* QR Code Section */}
+          <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
+            <QRCodeSection boxToken={box.token} boxTitle={box.title} />
+          </div>
+
           {/* Search, Filter, and Sort */}
-          <div className="animate-fade-in">
+          <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
             <Card className="glass-card border-primary/20">
               <CardHeader>
                 <CardTitle className="text-xl sm:text-2xl lg:text-3xl gradient-text">

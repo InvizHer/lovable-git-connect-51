@@ -210,32 +210,136 @@ const CreateBox = () => {
                       }}
                       disabled={loading}
                       required
-                      className="flex h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex h-12 w-full rounded-lg border-2 border-input bg-background px-4 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200 hover:border-primary/50"
                     >
-                      <option value="">Select category...</option>
-                      <optgroup label="Education">
+                      <option value="" className="text-muted-foreground">Select category...</option>
+                      
+                      <optgroup label="🎓 Education" className="font-semibold">
                         <option value="School">School</option>
                         <option value="College">College</option>
                         <option value="University">University</option>
+                        <option value="Examination Cell">Examination Cell</option>
+                        <option value="Admission Office">Admission Office</option>
+                        <option value="Library">Library</option>
+                        <option value="Laboratory">Laboratory</option>
+                        <option value="Sports Department">Sports Department</option>
+                        <option value="Accounts / Fees Department">Accounts / Fees Department</option>
+                        <option value="Hostel Office">Hostel Office</option>
                       </optgroup>
-                      <optgroup label="Corporate / Office">
+                      
+                      <optgroup label="🏢 Corporate / Office" className="font-semibold">
                         <option value="HR">HR</option>
                         <option value="Manager">Manager</option>
                         <option value="IT Department">IT Department</option>
                         <option value="Finance">Finance</option>
+                        <option value="Administration">Administration</option>
+                        <option value="Operations">Operations</option>
+                        <option value="Customer Support">Customer Support</option>
+                        <option value="Vendor Management">Vendor Management</option>
+                        <option value="Sales Team">Sales Team</option>
                       </optgroup>
-                      <optgroup label="Hostel / PG">
+                      
+                      <optgroup label="🏘 Hostel / PG" className="font-semibold">
                         <option value="Warden">Warden</option>
                         <option value="Mess">Mess</option>
                         <option value="Security">Security</option>
                         <option value="Maintenance">Maintenance</option>
+                        <option value="Electricity / Water">Electricity / Water</option>
+                        <option value="Cleanliness">Cleanliness</option>
+                        <option value="Room Issues">Room Issues</option>
                       </optgroup>
-                      <optgroup label="General">
-                        <option value="Public Service">Public Service</option>
-                        <option value="Healthcare">Healthcare</option>
-                        <option value="Customer Support">Customer Support</option>
+                      
+                      <optgroup label="🏥 Healthcare / Medical" className="font-semibold">
+                        <option value="Hospital">Hospital</option>
+                        <option value="Clinic">Clinic</option>
+                        <option value="Pharmacy">Pharmacy</option>
+                        <option value="Billing Department">Billing Department</option>
+                        <option value="Nursing Staff">Nursing Staff</option>
+                        <option value="Doctor Behaviour">Doctor Behaviour</option>
+                        <option value="Emergency Services">Emergency Services</option>
+                        <option value="Medical Negligence">Medical Negligence</option>
                       </optgroup>
-                      <option value="Other">Other (Custom)</option>
+                      
+                      <optgroup label="🏛 Public Service / Government" className="font-semibold">
+                        <option value="Municipal Corporation">Municipal Corporation</option>
+                        <option value="Water Supply Board">Water Supply Board</option>
+                        <option value="Electricity Department">Electricity Department</option>
+                        <option value="Road & Transport Department">Road & Transport Department</option>
+                        <option value="Police Department">Police Department</option>
+                        <option value="Public Grievance Cell">Public Grievance Cell</option>
+                        <option value="Ration / Public Distribution">Ration / Public Distribution</option>
+                        <option value="Government Office (UID / Passport / Licensing)">Government Office</option>
+                      </optgroup>
+                      
+                      <optgroup label="🛍 Customer Service / Retail" className="font-semibold">
+                        <option value="Product Quality">Product Quality</option>
+                        <option value="Billing / Pricing">Billing / Pricing</option>
+                        <option value="Delivery Issue">Delivery Issue</option>
+                        <option value="Refund / Return">Refund / Return</option>
+                        <option value="Warranty Claim">Warranty Claim</option>
+                        <option value="Service Centre">Service Centre</option>
+                        <option value="Store Staff Behaviour">Store Staff Behaviour</option>
+                      </optgroup>
+                      
+                      <optgroup label="🏡 Housing Society / Apartments" className="font-semibold">
+                        <option value="Society Management">Society Management</option>
+                        <option value="Security Guards">Security Guards</option>
+                        <option value="Cleaning / Housekeeping">Cleaning / Housekeeping</option>
+                        <option value="Parking Issues">Parking Issues</option>
+                        <option value="Maintenance Team">Maintenance Team</option>
+                        <option value="Lift / Facility Issues">Lift / Facility Issues</option>
+                        <option value="Neighbour Disturbance">Neighbour Disturbance</option>
+                      </optgroup>
+                      
+                      <optgroup label="🚗 Transport / Travel" className="font-semibold">
+                        <option value="Bus Service">Bus Service</option>
+                        <option value="Train Service">Train Service</option>
+                        <option value="Taxi / Cab">Taxi / Cab</option>
+                        <option value="Auto / Rickshaw">Auto / Rickshaw</option>
+                        <option value="Driver Behaviour">Driver Behaviour</option>
+                        <option value="Overcharging">Overcharging</option>
+                        <option value="Delay / Cancellation">Delay / Cancellation</option>
+                      </optgroup>
+                      
+                      <optgroup label="💻 Technology / IT Support" className="font-semibold">
+                        <option value="Software Issue">Software Issue</option>
+                        <option value="Hardware Issue">Hardware Issue</option>
+                        <option value="Network / Wi-Fi Issue">Network / Wi-Fi Issue</option>
+                        <option value="Online Portal Problem">Online Portal Problem</option>
+                        <option value="Account / Login Issue">Account / Login Issue</option>
+                        <option value="Data Loss">Data Loss</option>
+                        <option value="Security Concern">Security Concern</option>
+                      </optgroup>
+                      
+                      <optgroup label="🍽 Food & Dining" className="font-semibold">
+                        <option value="Canteen">Canteen</option>
+                        <option value="Cafeteria">Cafeteria</option>
+                        <option value="Restaurant">Restaurant</option>
+                        <option value="Food Quality">Food Quality</option>
+                        <option value="Staff Behaviour">Staff Behaviour</option>
+                        <option value="Hygiene Issues">Hygiene Issues</option>
+                      </optgroup>
+                      
+                      <optgroup label="🎭 Events & Activities" className="font-semibold">
+                        <option value="Event Management">Event Management</option>
+                        <option value="Cultural Activities">Cultural Activities</option>
+                        <option value="Sports Events">Sports Events</option>
+                        <option value="Registration Problems">Registration Problems</option>
+                        <option value="Miscommunication">Miscommunication</option>
+                      </optgroup>
+                      
+                      <optgroup label="📦 General" className="font-semibold">
+                        <option value="Complaint About Staff">Complaint About Staff</option>
+                        <option value="Service Delay">Service Delay</option>
+                        <option value="Behavioural Misconduct">Behavioural Misconduct</option>
+                        <option value="Mismanagement">Mismanagement</option>
+                        <option value="Safety Concern">Safety Concern</option>
+                        <option value="Facility Issue">Facility Issue</option>
+                      </optgroup>
+                      
+                      <optgroup label="🟦 Other" className="font-semibold">
+                        <option value="Other">Custom Category</option>
+                      </optgroup>
                     </select>
                   </motion.div>
 

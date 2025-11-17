@@ -76,18 +76,18 @@ export const StatusUpdateDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl glass-card border-primary/30">
+      <DialogContent className="max-w-[95vw] sm:max-w-2xl glass-card border-primary/30 p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="gradient-text">Update Complaint Status</DialogTitle>
-          <DialogDescription className="text-sm break-words">
+          <DialogTitle className="gradient-text text-lg sm:text-xl">Update Complaint Status</DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm break-words">
             {complaintTitle}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
-          <div className="space-y-3">
-            <Label className="text-sm font-semibold">Select New Status</Label>
-            <div className="grid gap-3">
+        <div className="space-y-4 sm:space-y-6">
+          <div className="space-y-2 sm:space-y-3">
+            <Label className="text-xs sm:text-sm font-semibold">Select New Status</Label>
+            <div className="grid gap-2 sm:gap-3">
               {statusOptions.map((status) => {
                 const Icon = status.icon;
                 const isSelected = selectedStatus === status.value;
@@ -98,33 +98,33 @@ export const StatusUpdateDialog = ({
                     key={status.value}
                     onClick={() => setSelectedStatus(status.value)}
                     className={cn(
-                      "relative p-4 rounded-lg border-2 transition-all text-left w-full",
+                      "relative p-3 sm:p-4 rounded-lg border-2 transition-all text-left w-full",
                       status.bgColor,
                       isSelected && "ring-2 ring-primary ring-offset-2 ring-offset-background",
                       isCurrent && "opacity-60"
                     )}
                   >
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-start gap-2 sm:gap-3">
                       <div className={cn("mt-0.5", status.color)}>
-                        <Icon className="w-5 h-5" />
+                        <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold">{status.label}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span className="font-semibold text-sm sm:text-base">{status.label}</span>
                           {isCurrent && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">
+                            <span className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full bg-primary/20 text-primary">
                               Current
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-[11px] sm:text-xs text-muted-foreground">
                           {status.description}
                         </p>
                       </div>
                       {isSelected && !isCurrent && (
                         <div className="absolute top-2 right-2">
-                          <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                            <Check className="w-4 h-4 text-primary-foreground" />
+                          <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary flex items-center justify-center">
+                            <Check className="w-3 h-3 sm:w-4 sm:h-4 text-primary-foreground" />
                           </div>
                         </div>
                       )}
@@ -137,7 +137,7 @@ export const StatusUpdateDialog = ({
 
           {selectedStatus !== currentStatus && (
             <div className="animate-fade-in space-y-2">
-              <Label htmlFor="note" className="text-sm font-semibold">
+              <Label htmlFor="note" className="text-xs sm:text-sm font-semibold">
                 Add Note (Optional)
               </Label>
               <Textarea
@@ -146,27 +146,28 @@ export const StatusUpdateDialog = ({
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="Add any additional notes about this status change..."
                 rows={3}
-                className="resize-none bg-background/50"
+                className="resize-none bg-background/50 text-xs sm:text-sm"
               />
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-4 border-t">
+          <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4 border-t">
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={updating}
+              className="w-full sm:w-auto text-sm"
             >
               Cancel
             </Button>
             <Button
               onClick={handleUpdate}
               disabled={updating || selectedStatus === currentStatus}
-              className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
+              className="w-full sm:w-auto bg-gradient-to-r from-primary to-accent hover:opacity-90 text-sm"
             >
               {updating ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-2 animate-spin" />
                   Updating...
                 </>
               ) : (

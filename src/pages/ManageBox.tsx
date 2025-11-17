@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import AdminHeader from "@/components/AdminHeader";
 import Footer from "@/components/Footer";
 import { QRCodeSection } from "@/components/QRCodeSection";
+import { StatusUpdateDialog } from "@/components/StatusUpdateDialog";
 import { motion } from "framer-motion";
 import {
   Select,
@@ -86,6 +87,10 @@ const ManageBox = () => {
   
   // QR Code modal state
   const [qrModalOpen, setQrModalOpen] = useState(false);
+  
+  // Status update dialog state
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [complaintToUpdate, setComplaintToUpdate] = useState<Complaint | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -205,7 +210,7 @@ const ManageBox = () => {
     setSavingEdit(false);
   };
 
-  const handleStatusUpdate = async (complaintId: string, newStatus: string) => {
+  const handleStatusUpdate = async (complaintId: string, newStatus: string, note?: string) => {
     const { error } = await supabase
       .from("complaints")
       .update({ status: newStatus })
@@ -218,6 +223,11 @@ const ManageBox = () => {
 
     toast.success("Status updated successfully");
     fetchComplaints();
+  };
+
+  const handleOpenStatusDialog = (complaint: Complaint) => {
+    setComplaintToUpdate(complaint);
+    setStatusDialogOpen(true);
   };
 
   const handleDeleteComplaint = async () => {
@@ -714,21 +724,14 @@ const ManageBox = () => {
                             Reply
                           </Button>
                         </div>
-                        <Select
-                          value={complaint.status}
-                          onValueChange={(value) =>
-                            handleStatusUpdate(complaint.id, value)
-                          }
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => handleOpenStatusDialog(complaint)}
                         >
-                          <SelectTrigger className="w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="received">Received</SelectItem>
-                            <SelectItem value="under_review">Under Review</SelectItem>
-                            <SelectItem value="solved">Solved</SelectItem>
-                          </SelectContent>
-                        </Select>
+                          Update Status
+                        </Button>
                         <Button
                           variant="destructive"
                           size="sm"
@@ -912,18 +915,31 @@ const ManageBox = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* QR Code Modal */}
+      {/* QR Code Dialog */}
       <Dialog open={qrModalOpen} onOpenChange={setQrModalOpen}>
-        <DialogContent className="glass-card border-primary/30 max-w-[90vw] sm:max-w-md max-h-[95vh] overflow-y-auto p-4 sm:p-6">
-          <DialogHeader className="space-y-2 pb-2">
-            <DialogTitle className="text-xl sm:text-2xl gradient-text text-center">QR Code</DialogTitle>
-            <DialogDescription className="text-center text-xs sm:text-sm">
-              Share this QR code to let users submit complaints
+        <DialogContent className="max-w-[95vw] sm:max-w-md glass-card border-primary/30">
+          <DialogHeader>
+            <DialogTitle className="gradient-text">Complaint Box QR Code</DialogTitle>
+            <DialogDescription>
+              Scan to submit complaints
             </DialogDescription>
           </DialogHeader>
-          <QRCodeSection boxToken={box.token} boxTitle={box.title} />
+          <QRCodeSection boxToken={box?.token || ""} boxTitle={box?.title || ""} />
         </DialogContent>
       </Dialog>
+
+      {/* Status Update Dialog */}
+      {complaintToUpdate && (
+        <StatusUpdateDialog
+          open={statusDialogOpen}
+          onOpenChange={setStatusDialogOpen}
+          currentStatus={complaintToUpdate.status}
+          complaintTitle={complaintToUpdate.title}
+          onStatusUpdate={(newStatus, note) => 
+            handleStatusUpdate(complaintToUpdate.id, newStatus, note)
+          }
+        />
+      )}
     </div>
   );
 };

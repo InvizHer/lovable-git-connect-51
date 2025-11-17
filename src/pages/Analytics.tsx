@@ -24,6 +24,15 @@ interface Analytics {
   total_feedbacks: number;
 }
 
+interface CategoryStats {
+  category: string;
+  count: number;
+  received: number;
+  under_review: number;
+  solved: number;
+  resolution_rate: number;
+}
+
 const COLORS = {
   received: "hsl(var(--primary))",
   in_progress: "hsl(var(--accent))",
@@ -41,6 +50,7 @@ const Analytics = () => {
   const [totalComplaints, setTotalComplaints] = useState(0);
   const [avgRating, setAvgRating] = useState(0);
   const [totalFeedbacks, setTotalFeedbacks] = useState(0);
+  const [categoryStats, setCategoryStats] = useState<CategoryStats[]>([]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -49,6 +59,7 @@ const Analytics = () => {
       } else {
         fetchBoxDetails();
         fetchAnalytics();
+        fetchCategoryStats();
       }
     });
   }, [id, navigate, timeRange]);
@@ -114,6 +125,44 @@ const Analytics = () => {
     setTotalFeedbacks(totalFb);
     setAvgRating(avgR);
     setLoading(false);
+  };
+
+  const fetchCategoryStats = async () => {
+    const { data: complaints, error } = await supabase
+      .from("complaints")
+      .select("*")
+      .eq("box_id", id);
+
+    if (error) {
+      console.error("Failed to load category stats:", error);
+      return;
+    }
+
+    // Group by category and calculate stats
+    const categoryMap = new Map<string, { count: number; received: number; under_review: number; solved: number }>();
+    
+    complaints?.forEach((complaint: any) => {
+      const category = complaint.complaint_category || "Uncategorized";
+      if (!categoryMap.has(category)) {
+        categoryMap.set(category, { count: 0, received: 0, under_review: 0, solved: 0 });
+      }
+      const stats = categoryMap.get(category)!;
+      stats.count++;
+      if (complaint.status === "received") stats.received++;
+      else if (complaint.status === "under_review") stats.under_review++;
+      else if (complaint.status === "solved") stats.solved++;
+    });
+
+    const statsArray: CategoryStats[] = Array.from(categoryMap.entries()).map(([category, stats]) => ({
+      category,
+      count: stats.count,
+      received: stats.received,
+      under_review: stats.under_review,
+      solved: stats.solved,
+      resolution_rate: stats.count > 0 ? Math.round((stats.solved / stats.count) * 100) : 0,
+    })).sort((a, b) => b.count - a.count);
+
+    setCategoryStats(statsArray);
   };
 
   const getStatusDistribution = () => {
@@ -267,7 +316,7 @@ const Analytics = () => {
           {/* Charts */}
           <div className="animate-fade-in">
             <Tabs defaultValue="trends" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-3 glass">
+              <TabsList className="grid w-full grid-cols-4 glass">
                 <TabsTrigger value="trends">
                   <TrendingUp className="w-4 h-4 mr-2" />
                   <span className="hidden sm:inline">Trends</span>
@@ -275,6 +324,10 @@ const Analytics = () => {
                 <TabsTrigger value="status">
                   <PieChart className="w-4 h-4 mr-2" />
                   <span className="hidden sm:inline">Status</span>
+                </TabsTrigger>
+                <TabsTrigger value="categories">
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">Categories</span>
                 </TabsTrigger>
                 <TabsTrigger value="ratings">
                   <Star className="w-4 h-4 mr-2" />
@@ -381,6 +434,82 @@ const Analytics = () => {
                               />
                               <span className="font-medium">{item.name}</span>
                               <Badge variant="secondary" className="ml-auto">{item.value}</Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="categories" className="space-y-6">
+                <Card className="glass-card">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-xl">
+                      <BarChart3 className="w-6 h-6 text-primary" />
+                      Category Analysis
+                    </CardTitle>
+                    <CardDescription>Complaint distribution and resolution by category</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {categoryStats.length === 0 ? (
+                      <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                        No category data available
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        <ResponsiveContainer width="100%" height={300}>
+                          <BarChart data={categoryStats}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                            <XAxis 
+                              dataKey="category" 
+                              stroke="hsl(var(--muted-foreground))"
+                              angle={-45}
+                              textAnchor="end"
+                              height={100}
+                              fontSize={12}
+                            />
+                            <YAxis stroke="hsl(var(--muted-foreground))" />
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: "hsl(var(--background))",
+                                border: "1px solid hsl(var(--border))",
+                                borderRadius: "8px"
+                              }}
+                            />
+                            <Legend />
+                            <Bar dataKey="count" fill="hsl(var(--primary))" name="Total" />
+                            <Bar dataKey="solved" fill="hsl(var(--success))" name="Solved" />
+                          </BarChart>
+                        </ResponsiveContainer>
+
+                        <div className="grid gap-3">
+                          {categoryStats.map((stat) => (
+                            <div 
+                              key={stat.category}
+                              className="p-4 rounded-lg border border-border bg-card/50 hover:bg-card/70 transition-colors"
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <h4 className="font-semibold text-sm">{stat.category}</h4>
+                                <Badge variant={stat.resolution_rate > 70 ? "default" : "secondary"}>
+                                  {stat.resolution_rate}% Resolved
+                                </Badge>
+                              </div>
+                              <div className="grid grid-cols-4 gap-2 text-xs text-muted-foreground">
+                                <div>
+                                  <span className="font-medium text-foreground">{stat.count}</span> Total
+                                </div>
+                                <div>
+                                  <span className="font-medium text-foreground">{stat.received}</span> Received
+                                </div>
+                                <div>
+                                  <span className="font-medium text-foreground">{stat.under_review}</span> In Progress
+                                </div>
+                                <div>
+                                  <span className="font-medium text-foreground">{stat.solved}</span> Solved
+                                </div>
+                              </div>
                             </div>
                           ))}
                         </div>

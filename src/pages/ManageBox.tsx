@@ -717,17 +717,17 @@ const ManageBox = () => {
                           </Button>
                         </div>
                         <Button
-                          variant="secondary"
+                          variant="outline"
                           size="sm"
-                          className="w-full"
+                          className="border-primary/30 hover:bg-primary/10 w-full"
                           onClick={() => handleOpenStatusDialog(complaint)}
                         >
                           Update Status
                         </Button>
                         <Button
-                          variant="destructive"
+                          variant="outline"
                           size="sm"
-                          className="w-full"
+                          className="border-destructive/50 text-destructive hover:bg-destructive hover:text-white w-full"
                           onClick={() => {
                             setComplaintToDelete(complaint.id);
                             setDeleteDialogOpen(true);

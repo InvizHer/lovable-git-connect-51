@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, MessageSquare, Trash2, ExternalLink, TrendingUp, BarChart3, Settings, Star } from "lucide-react";
+import { Plus, MessageCircle, Trash2, ExternalLink, TrendingUp, BarChart3, Settings, Star } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -211,11 +211,11 @@ const Dashboard = () => {
           >
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h1 className="text-4xl sm:text-5xl font-bold gradient-text mb-2">
-                  Welcome back, {profile?.username || user?.email?.split('@')[0]}! 👋
+                <h1 className="text-3xl sm:text-3xl font-bold gradient-text mb-2">
+                  Welcome back, {profile?.username} 👋
                 </h1>
-                <p className="text-lg text-muted-foreground">
-                  Here's your complaint management overview
+                <p className="text-md text-muted-foreground">
+                  Here's your personal complaint management dashboard
                 </p>
               </div>
               <Button
@@ -225,7 +225,7 @@ const Dashboard = () => {
               >
                 <Plus className="w-5 h-5" />
                 <span className="hidden sm:inline">Create New Box</span>
-                <span className="sm:hidden">Create</span>
+                <span className="sm:hidden">Create New</span>
               </Button>
             </div>
           </motion.div>
@@ -245,7 +245,7 @@ const Dashboard = () => {
                     <p className="text-3xl font-bold gradient-text mt-1">{boxes.length}</p>
                   </div>
                   <div className="p-3 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20">
-                    <MessageSquare className="w-6 h-6 text-primary" />
+                    <MessageCircle className="w-6 h-6 text-primary" />
                   </div>
                 </div>
               </CardContent>
@@ -311,7 +311,7 @@ const Dashboard = () => {
               <Card className="glass-card border-dashed border-2 border-primary/30">
                 <CardContent className="py-20 text-center">
                   <div className="p-6 rounded-3xl bg-gradient-to-br from-primary/10 to-accent/10 w-fit mx-auto mb-6">
-                    <MessageSquare className="w-16 h-16 text-primary opacity-50" />
+                    <MessageCircle className="w-16 h-16 text-primary opacity-50" />
                   </div>
                   <h3 className="text-2xl font-bold mb-2">No complaint boxes yet</h3>
                   <p className="text-lg text-muted-foreground mb-6">
@@ -340,7 +340,7 @@ const Dashboard = () => {
                       <CardHeader className="flex-1">
                         <div className="space-y-4">
                           <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 w-fit group-hover:scale-110 transition-transform">
-                            <MessageSquare className="w-8 h-8 text-primary" />
+                            <MessageCircle className="w-8 h-8 text-primary" />
                           </div>
                           <div>
                             <CardTitle className="text-xl break-words line-clamp-2 group-hover:text-primary transition-colors mb-2">

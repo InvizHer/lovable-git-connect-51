@@ -61,7 +61,7 @@ const Landing = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEOHead 
-        title="Anonymous Feedback Platform"
+        title="TellUs - Digital Complaint Box"
         description="A modern, secure platform for anonymous feedback and complaint management in educational institutions and organizations. Submit and track complaints anonymously."
         keywords="complaint management, anonymous feedback, educational institutions, feedback system, secure complaints, track complaints"
       />
@@ -79,12 +79,12 @@ const Landing = () => {
             <div className="space-y-8 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border">
                 <Sparkles className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium">Anonymous & Secure Platform</span>
+                <span className="text-sm font-medium">Digital Complaint Box</span>
               </div>
               
               <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight">
-                Your Voice,
-                <span className="gradient-text block">Your Privacy</span>
+                Tell Us,
+                <span className="gradient-text block">What Matters!</span>
               </h1>
               
               <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto lg:mx-0">

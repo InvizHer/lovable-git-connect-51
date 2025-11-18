@@ -16,8 +16,8 @@ const Footer = () => {
           </p>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <span>Made with</span>
-            <Heart className="h-3 w-3 fill-pink-500 text-pink-500" />
-            <span>for better communication</span>
+            <Heart className="h-3 w-3 fill-red-500 text-red-500" />
+            <span>by Team TellUs.</span>
           </div>
         </div>
       </div>

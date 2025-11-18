@@ -12,11 +12,11 @@ const Footer = () => {
             <span className="text-lg font-bold gradient-text">TellUs</span>
           </div>
           <p className="text-sm text-muted-foreground max-w-md">
-            Secure & Anonymous Complaint Management System
+            Secure, Modern and Digital Complaint Management System
           </p>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <span>Made with</span>
-            <Heart className="h-3 w-3 fill-primary text-primary" />
+            <Heart className="h-3 w-3 fill-pink-500 text-pink-500" />
             <span>for better communication</span>
           </div>
         </div>

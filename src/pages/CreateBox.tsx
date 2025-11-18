@@ -128,9 +128,9 @@ const CreateBox = () => {
               <ArrowLeft className="w-4 h-4" />
               Back to Dashboard
             </Button>
-            <h1 className="text-4xl font-bold gradient-text mb-2">Create Complaint Box</h1>
+            <h1 className="text-4xl font-bold gradient-text mb-2">Create New Complaint Box</h1>
             <p className="text-muted-foreground text-lg">
-              Set up a new space for anonymous feedback
+              Start to set up a new complaint box by filling details below
             </p>
           </motion.div>
 

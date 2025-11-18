@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { MessageSquare } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import { useScrollHeader } from "@/hooks/use-scroll-header";
 
@@ -19,7 +19,7 @@ const FrontendHeader = () => {
             onClick={() => navigate("/")}
           >
             <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent group-hover:scale-110 transition-transform">
-              <MessageSquare className="h-5 w-5 text-white" />
+              <MessageCircle className="h-5 w-5 text-white" />
             </div>
             <span className="text-xl font-bold gradient-text">
               TellUs
@@ -42,7 +42,7 @@ const FrontendHeader = () => {
               onClick={() => navigate("/track")}
               className="md:hidden rounded-full"
             >
-              <MessageSquare className="h-4 w-4" />
+              <MessageCircle className="h-4 w-4" />
             </Button>
             <ThemeToggle />
           </nav>

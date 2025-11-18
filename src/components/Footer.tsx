@@ -19,7 +19,6 @@ const Footer = () => {
             <Heart className="h-3 w-3 fill-pink-500 text-pink-500" />
             <span>by Team TellUs.</span>
           </div>
-          <span className="text-sm text-muted-foreground max-w-md">© Copyright 2025-26 - Team TellUs</span>
         </div>
       </div>
     </footer>

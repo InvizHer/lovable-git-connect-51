@@ -259,7 +259,7 @@ const SubmitComplaint = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto space-y-8">
           <div className="animate-fade-in">
@@ -365,7 +365,7 @@ const SubmitComplaint = () => {
                       className="cursor-pointer"
                     />
                     {file && (
-                      <div className="space-y-3 p-3 sm:p-4 bg-secondary/50 rounded-lg border border-border">
+                      <div className="space-y-3 p-3 sm:p-4 bg-secondary/50 rounded-lg border border-border max-w-full overflow-hidden">
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2 flex-1 min-w-0">
                             <Upload className="w-4 h-4 text-primary flex-shrink-0" />
@@ -382,11 +382,11 @@ const SubmitComplaint = () => {
                           </Button>
                         </div>
                         {file.type.startsWith("image/") && (
-                          <div className="relative w-full bg-muted rounded-lg overflow-hidden flex items-center justify-center">
+                          <div className="relative w-full max-w-full bg-muted rounded-lg overflow-hidden flex items-center justify-center">
                             <img
                               src={URL.createObjectURL(file)}
                               alt="Preview"
-                              className="w-full h-auto object-contain max-w-full max-h-[200px] sm:max-h-[300px] md:max-h-[400px]"
+                              className="block w-full h-auto object-contain max-w-full max-h-[180px] sm:max-h-[260px] md:max-h-[360px]"
                             />
                           </div>
                         )}

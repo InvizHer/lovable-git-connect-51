@@ -668,21 +668,13 @@ const ManageBox = () => {
                           <Eye className="w-4 h-4 mr-2" />
                           View Full
                         </Button>
-                        <Select
-                          value={complaint.status}
-                          onValueChange={(value) =>
-                            handleStatusUpdate(complaint.id, value)
-                          }
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleOpenStatusDialog(complaint)}
                         >
-                          <SelectTrigger className="w-[160px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="received">Received</SelectItem>
-                            <SelectItem value="under_review">Under Review</SelectItem>
-                            <SelectItem value="solved">Solved</SelectItem>
-                          </SelectContent>
-                        </Select>
+                          Update Status
+                        </Button>
                         <Button
                           variant="secondary"
                           size="sm"

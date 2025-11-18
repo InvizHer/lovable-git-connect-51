@@ -358,10 +358,10 @@ const ManageBox = () => {
                         <MessageCircle className="w-8 h-8 text-primary" />
                       </div>
                       <div className="flex-1">
-                        <CardTitle className="text-3xl sm:text-4xl gradient-text mb-2">
+                        <CardTitle className="text-2xl sm:text-3xl gradient-text mb-2">
                           {box.title}
                         </CardTitle>
-                        <CardDescription className="text-base sm:text-lg">
+                        <CardDescription className="text-base sm:text-md">
                           {box.description || "Submit your complaint anonymously"}
                         </CardDescription>
                       </div>
@@ -630,7 +630,7 @@ const ManageBox = () => {
               {filteredComplaints.map((complaint) => (
                 <Card key={complaint.id} className="glass-card border-primary/20 hover:shadow-[var(--shadow-strong)] hover:border-primary/40 transition-all duration-300">
                     <CardHeader>
-                      <div className="flex flex-col sm:flex-row justify-between gap-3">
+                      <div className="flex flex-row sm:flex-row justify-between gap-3">
                         <div className="space-y-2 flex-1 min-w-0">
                           <CardTitle className="text-lg sm:text-xl break-words">{complaint.title}</CardTitle>
                           <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-muted-foreground">

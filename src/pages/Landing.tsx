@@ -110,19 +110,19 @@ const Landing = () => {
                 </Button>
               </div>
 
-              <div className="flex items-center justify-center lg:justify-start gap-8 pt-4">
+              <div className="flex items-center justify-center lg:justify-start gap-6 pt-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold gradient-text">100%</div>
+                  <div className="text-xl font-bold gradient-text">100%</div>
                   <div className="text-xs text-muted-foreground">Anonymous</div>
                 </div>
                 <div className="w-px h-10 bg-border" />
                 <div className="text-center">
-                  <div className="text-2xl font-bold gradient-text">Secure</div>
+                  <div className="text-xl font-bold gradient-text">Secure</div>
                   <div className="text-xs text-muted-foreground">Encrypted</div>
                 </div>
                 <div className="w-px h-10 bg-border" />
                 <div className="text-center">
-                  <div className="text-2xl font-bold gradient-text">Fast</div>
+                  <div className="text-xl font-bold gradient-text">Fast</div>
                   <div className="text-xs text-muted-foreground">Real-time</div>
                 </div>
               </div>

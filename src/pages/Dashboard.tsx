@@ -212,7 +212,7 @@ const Dashboard = () => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <h1 className="text-3xl sm:text-3xl font-bold gradient-text mb-2">
-                  Welcome back, {profile?.username} 👋
+                  Welcome back {profile?.username || user?.email?.split('@')[0]} 👋
                 </h1>
                 <p className="text-md text-muted-foreground">
                   Here's your personal complaint management dashboard

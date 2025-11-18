@@ -382,11 +382,11 @@ const SubmitComplaint = () => {
                           </Button>
                         </div>
                         {file.type.startsWith("image/") && (
-                          <div className="relative w-full bg-muted rounded-lg overflow-hidden">
+                          <div className="relative w-full bg-muted rounded-lg overflow-hidden flex items-center justify-center">
                             <img
                               src={URL.createObjectURL(file)}
                               alt="Preview"
-                              className="w-full h-auto object-contain max-h-[40vh] sm:max-h-[50vh]"
+                              className="w-full h-auto object-contain max-w-full max-h-[200px] sm:max-h-[300px] md:max-h-[400px]"
                             />
                           </div>
                         )}

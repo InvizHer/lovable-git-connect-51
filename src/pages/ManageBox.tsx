@@ -815,11 +815,19 @@ const ManageBox = () => {
                     </Button>
                   </div>
                   {selectedComplaint.attachment_type?.startsWith("image/") && (
-                    <div className="relative w-full bg-muted rounded-lg overflow-hidden">
+                    <div className="relative w-full bg-muted rounded-lg overflow-hidden flex items-center justify-center">
                       <img
                         src={selectedComplaint.attachment_url}
                         alt="Attachment Preview"
-                        className="w-full h-auto object-contain max-h-[50vh] sm:max-h-96"
+                        className="w-full h-auto object-contain max-w-full max-h-[250px] sm:max-h-[350px] md:max-h-96"
+                        onError={(e) => {
+                          console.error("Failed to load image:", selectedComplaint.attachment_url);
+                          e.currentTarget.style.display = "none";
+                          const parent = e.currentTarget.parentElement;
+                          if (parent) {
+                            parent.innerHTML = '<div class="text-destructive text-sm p-4">Failed to load image preview</div>';
+                          }
+                        }}
                       />
                     </div>
                   )}

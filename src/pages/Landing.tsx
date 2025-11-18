@@ -79,7 +79,7 @@ const Landing = () => {
             <div className="space-y-8 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border">
                 <Sparkles className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium">Digital Complaint Box</span>
+                <span className="text-sm font-medium">Modern Digital Complaint Box</span>
               </div>
               
               <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight">
@@ -88,7 +88,7 @@ const Landing = () => {
               </h1>
               
               <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto lg:mx-0">
-                Empower your institution with a secure feedback system. Submit complaints anonymously, track progress transparently, and foster better communication.
+                Empower your community or organization with a secure digital complanit box system. Submit issues and complaints anonymously, track progress transparently, and foster better communication.
               </p>
               
               <div className="flex gap-4 justify-center lg:justify-start flex-wrap">
@@ -322,7 +322,7 @@ const Landing = () => {
               viewport={{ once: true }}
               transition={{ delay: 0.4 }}
             >
-              Join educational institutions and organizations using TellUs for better communication
+              Join as educational institutions or organizations using TellUs for better communication
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 20 }}

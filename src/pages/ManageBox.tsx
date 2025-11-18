@@ -638,7 +638,7 @@ const ManageBox = () => {
                             <span>{new Date(complaint.created_at).toLocaleString()}</span>
                           </div>
                         </div>
-                        <div className={`self-start px-4 py-2 rounded-full border text-sm font-semibold ${getStatusColor(complaint.status)}`}>
+                        <div className={`self-start px-3 py-2 rounded-full border text-xs font-semibold ${getStatusColor(complaint.status)}`}>
                           {getStatusLabel(complaint.status)}
                         </div>
                       </div>

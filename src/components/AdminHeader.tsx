@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { MessageSquare, LogOut, LayoutDashboard, User } from "lucide-react";
+import { MessageCircle, LogOut, LayoutDashboard, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ThemeToggle from "./ThemeToggle";
@@ -31,7 +31,7 @@ const AdminHeader = () => {
             onClick={() => navigate("/dashboard")}
           >
             <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent group-hover:scale-110 transition-transform">
-              <MessageSquare className="h-5 w-5 text-white" />
+              <MessageCircle className="h-5 w-5 text-white" />
             </div>
             <span className="text-xl font-bold gradient-text hidden sm:inline">
               TellUs

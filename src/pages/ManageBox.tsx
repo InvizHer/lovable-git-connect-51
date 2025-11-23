@@ -510,10 +510,7 @@ const ManageBox = () => {
                       Edit
                     </Button>
                   )}
-                  <Button onClick={() => setShareModalOpen(true)} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
-                    <Share2 className="w-4 h-4 mr-2" />
-                    Share
-                  </Button>
+                  
                   <Button
                     variant="outline"
                     onClick={() => navigate(`/analytics/${id}`)}
@@ -527,6 +524,11 @@ const ManageBox = () => {
                   >
                     <QrCode className="w-4 h-4 mr-2" />
                     QR Code
+                  </Button>
+
+                  <Button onClick={() => setShareModalOpen(true)} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Share
                   </Button>
                 </div>
 
@@ -542,10 +544,7 @@ const ManageBox = () => {
                       Edit
                     </Button>
                   )}
-                  <Button onClick={() => setShareModalOpen(true)} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
-                    <Share2 className="w-4 h-4 mr-2" />
-                    Share
-                  </Button>
+                  
                   <Button
                     variant="outline"
                     onClick={() => navigate(`/analytics/${id}`)}
@@ -559,6 +558,10 @@ const ManageBox = () => {
                   >
                     <QrCode className="w-4 h-4 mr-2" />
                     QR Code
+                  </Button>
+                  <Button onClick={() => setShareModalOpen(true)} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Share
                   </Button>
                 </div>
 

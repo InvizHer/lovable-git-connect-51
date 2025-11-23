@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { 
   Loader2, Copy, Trash2, Search, Filter, Eye, Reply, 
   Calendar, MessageSquare, Download, FileText, Image as ImageIcon, 
-  BarChart3, Edit, Save, X, ArrowUpDown, QrCode, MessageCircle
+  BarChart3, Edit, Save, X, ArrowUpDown, QrCode, MessageCircle, Share2
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,6 +18,7 @@ import AdminHeader from "@/components/AdminHeader";
 import Footer from "@/components/Footer";
 import { QRCodeSection } from "@/components/QRCodeSection";
 import { StatusUpdateDialog } from "@/components/StatusUpdateDialog";
+import { ShareDialog } from "@/components/ShareDialog";
 import { motion } from "framer-motion";
 import {
   Select,
@@ -87,6 +88,9 @@ const ManageBox = () => {
   
   // QR Code modal state
   const [qrModalOpen, setQrModalOpen] = useState(false);
+  
+  // Share modal state
+  const [shareModalOpen, setShareModalOpen] = useState(false);
   
   // Status update dialog state
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
@@ -506,9 +510,9 @@ const ManageBox = () => {
                       Edit
                     </Button>
                   )}
-                  <Button onClick={copyLink} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
-                    <Copy className="w-4 h-4 mr-2" />
-                    Copy Link
+                  <Button onClick={() => setShareModalOpen(true)} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Share
                   </Button>
                   <Button
                     variant="outline"
@@ -538,9 +542,9 @@ const ManageBox = () => {
                       Edit
                     </Button>
                   )}
-                  <Button onClick={copyLink} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
-                    <Copy className="w-4 h-4 mr-2" />
-                    Copy
+                  <Button onClick={() => setShareModalOpen(true)} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Share
                   </Button>
                   <Button
                     variant="outline"
@@ -940,6 +944,15 @@ const ManageBox = () => {
           }
         />
       )}
+
+      {/* Share Dialog */}
+      <ShareDialog
+        open={shareModalOpen}
+        onOpenChange={setShareModalOpen}
+        url={`${window.location.origin}/complaint/${box?.token || ""}`}
+        title={box?.title || "Complaint Box"}
+        description={box?.description || "Submit your complaint anonymously"}
+      />
     </div>
   );
 };

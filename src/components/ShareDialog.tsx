@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { 
   Share2, Copy, ExternalLink, Mail, 
-  MessageCircle, Send, Linkedin, Twitter 
+  MessageCircle, Send, Instagram, Twitter 
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -42,7 +42,7 @@ export function ShareDialog({ open, onOpenChange, url, title, description }: Sha
   const shareLinks = {
     whatsapp: `https://wa.me/?text=${encodeURIComponent(`${title}\n${url}`)}`,
     telegram: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`,
-    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
+    instagram: `https://www.instagram.com/`, // Instagram doesn't support direct sharing, opens Instagram
     twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`,
     email: `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(`${description || title}\n\n${url}`)}`,
   };
@@ -65,6 +65,12 @@ export function ShareDialog({ open, onOpenChange, url, title, description }: Sha
         </DialogHeader>
         
         <div className="space-y-4 py-2">
+          {/* Link Preview */}
+          <div className="p-3 bg-secondary/50 rounded-lg border border-border">
+            <p className="text-xs font-semibold text-muted-foreground mb-1">Link Preview</p>
+            <p className="text-xs break-all text-primary font-mono">{url}</p>
+          </div>
+
           {/* Social Media Share Options */}
           <div className="space-y-2">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1">
@@ -91,11 +97,11 @@ export function ShareDialog({ open, onOpenChange, url, title, description }: Sha
               
               <Button
                 variant="outline"
-                className="h-auto py-3 px-3 sm:px-4 flex flex-col sm:flex-row items-center justify-center gap-2 hover:bg-[#0A66C2]/10 hover:border-[#0A66C2]/50 hover:text-[#0A66C2] transition-colors"
-                onClick={() => openShareLink("linkedin")}
+                className="h-auto py-3 px-3 sm:px-4 flex flex-col sm:flex-row items-center justify-center gap-2 hover:bg-[#E4405F]/10 hover:border-[#E4405F]/50 hover:text-[#E4405F] transition-colors"
+                onClick={() => openShareLink("instagram")}
               >
-                <Linkedin className="w-5 h-5" />
-                <span className="text-xs sm:text-sm font-medium">LinkedIn</span>
+                <Instagram className="w-5 h-5" />
+                <span className="text-xs sm:text-sm font-medium">Instagram</span>
               </Button>
               
               <Button
@@ -146,14 +152,6 @@ export function ShareDialog({ open, onOpenChange, url, title, description }: Sha
                 <ExternalLink className="w-4 h-4 mr-2" />
                 <span className="text-sm font-medium">Open Link</span>
               </Button>
-            </div>
-          </div>
-
-          {/* Link Preview */}
-          <div className="pt-2">
-            <div className="p-3 bg-secondary/50 rounded-lg border border-border">
-              <p className="text-xs font-semibold text-muted-foreground mb-1">Link Preview</p>
-              <p className="text-xs break-all text-primary font-mono">{url}</p>
             </div>
           </div>
         </div>

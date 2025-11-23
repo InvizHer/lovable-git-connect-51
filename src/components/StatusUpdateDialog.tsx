@@ -7,9 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Check, Clock, Play, Loader2, ArrowRight } from "lucide-react";
+import { Check, Clock, Play, Loader2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface StatusUpdateDialogProps {
@@ -25,34 +23,43 @@ const statusOptions = [
     value: "received",
     label: "Received",
     icon: Clock,
-    description: "Complaint logged in system",
+    description: "Complaint has been logged and acknowledged",
     color: "text-blue-500",
-    borderColor: "border-blue-500",
-    bgGradient: "bg-gradient-to-br from-blue-500/10 to-blue-600/5",
-    iconBg: "bg-blue-500/20",
-    step: 1,
+    gradientFrom: "from-blue-500/20",
+    gradientTo: "to-blue-500/5",
+    borderColor: "border-blue-500/40",
+    glowColor: "shadow-blue-500/20",
+    hoverBorder: "hover:border-blue-500",
+    iconBgStart: "from-blue-500/30",
+    iconBgEnd: "to-blue-600/20",
   },
   {
     value: "under_review",
     label: "Under Review",
     icon: Play,
-    description: "Currently being processed",
+    description: "Team is actively working on this complaint",
     color: "text-amber-500",
-    borderColor: "border-amber-500",
-    bgGradient: "bg-gradient-to-br from-amber-500/10 to-amber-600/5",
-    iconBg: "bg-amber-500/20",
-    step: 2,
+    gradientFrom: "from-amber-500/20",
+    gradientTo: "to-amber-500/5",
+    borderColor: "border-amber-500/40",
+    glowColor: "shadow-amber-500/20",
+    hoverBorder: "hover:border-amber-500",
+    iconBgStart: "from-amber-500/30",
+    iconBgEnd: "to-amber-600/20",
   },
   {
     value: "solved",
     label: "Solved",
     icon: Check,
-    description: "Issue successfully resolved",
+    description: "Complaint has been successfully resolved",
     color: "text-green-500",
-    borderColor: "border-green-500",
-    bgGradient: "bg-gradient-to-br from-green-500/10 to-green-600/5",
-    iconBg: "bg-green-500/20",
-    step: 3,
+    gradientFrom: "from-green-500/20",
+    gradientTo: "to-green-500/5",
+    borderColor: "border-green-500/40",
+    glowColor: "shadow-green-500/20",
+    hoverBorder: "hover:border-green-500",
+    iconBgStart: "from-green-500/30",
+    iconBgEnd: "to-green-600/20",
   },
 ];
 
@@ -64,7 +71,6 @@ export const StatusUpdateDialog = ({
   complaintTitle,
 }: StatusUpdateDialogProps) => {
   const [selectedStatus, setSelectedStatus] = useState(currentStatus);
-  const [note, setNote] = useState("");
   const [updating, setUpdating] = useState(false);
 
   const handleUpdate = async () => {
@@ -75,153 +81,145 @@ export const StatusUpdateDialog = ({
 
     setUpdating(true);
     try {
-      await onStatusUpdate(selectedStatus, note);
+      await onStatusUpdate(selectedStatus);
       onOpenChange(false);
-      setNote("");
     } finally {
       setUpdating(false);
     }
   };
 
   const currentStatusData = statusOptions.find(s => s.value === currentStatus);
-  const selectedStatusData = statusOptions.find(s => s.value === selectedStatus);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] sm:max-w-3xl glass-card border-primary/30 p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="space-y-3">
-          <DialogTitle className="gradient-text text-lg sm:text-2xl">Update Status</DialogTitle>
-          <DialogDescription className="text-xs sm:text-sm break-words">
+      <DialogContent className="max-w-[95vw] sm:max-w-2xl glass-card border-primary/30 p-3 sm:p-5 max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="space-y-2 pb-3">
+          <DialogTitle className="gradient-text text-base sm:text-xl flex items-center gap-2">
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
+            Change Status
+          </DialogTitle>
+          <DialogDescription className="text-[11px] sm:text-sm break-words line-clamp-2">
             {complaintTitle}
           </DialogDescription>
           
-          {/* Current Status Badge */}
-          <div className="flex items-center gap-2 pt-2">
-            <span className="text-xs text-muted-foreground">Current Status:</span>
-            {currentStatusData && (
+          {/* Current Status Indicator */}
+          {currentStatusData && (
+            <div className="flex items-center gap-2 pt-1">
+              <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">Currently:</span>
               <div className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium",
-                currentStatusData.iconBg,
+                "flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold",
+                "bg-gradient-to-r",
+                currentStatusData.iconBgStart,
+                currentStatusData.iconBgEnd,
                 currentStatusData.color
               )}>
                 {(() => {
                   const Icon = currentStatusData.icon;
-                  return <Icon className="w-3.5 h-3.5" />;
+                  return <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />;
                 })()}
                 <span>{currentStatusData.label}</span>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </DialogHeader>
 
-        <div className="space-y-5 sm:space-y-6 pt-4">
-          {/* Status Flow Timeline */}
-          <div className="relative">
-            <div className="flex items-center justify-between mb-6">
-              {statusOptions.map((status, index) => {
-                const Icon = status.icon;
-                const isCurrent = currentStatus === status.value;
-                const isSelected = selectedStatus === status.value;
-                const isPast = statusOptions.findIndex(s => s.value === currentStatus) >= index;
-                
-                return (
-                  <div key={status.value} className="flex flex-col items-center flex-1 relative">
-                    {index < statusOptions.length - 1 && (
-                      <div className={cn(
-                        "absolute top-6 left-[50%] w-full h-0.5 -z-10",
-                        isPast ? "bg-primary/30" : "bg-border"
-                      )} />
-                    )}
-                    <button
-                      onClick={() => setSelectedStatus(status.value)}
-                      className={cn(
-                        "w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all mb-2",
-                        "border-2",
-                        isSelected && status.borderColor,
-                        isSelected && status.iconBg,
-                        !isSelected && isCurrent && "border-primary/50 bg-primary/10",
-                        !isSelected && !isCurrent && isPast && "border-border bg-muted",
-                        !isSelected && !isCurrent && !isPast && "border-dashed border-border bg-background",
-                        isSelected && "scale-110 shadow-lg"
-                      )}
-                    >
-                      <Icon className={cn(
-                        "w-4 h-4 sm:w-5 sm:h-5 transition-colors",
-                        isSelected ? status.color : isCurrent ? "text-primary" : isPast ? "text-muted-foreground" : "text-muted-foreground/40"
-                      )} />
-                    </button>
-                    <span className={cn(
-                      "text-[10px] sm:text-xs font-medium text-center",
-                      isSelected ? status.color : isCurrent ? "text-primary" : "text-muted-foreground"
-                    )}>
-                      {status.label}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+        <div className="space-y-3 sm:space-y-4 pt-2">
+          {/* Status Cards Grid */}
+          <div className="grid gap-2.5 sm:gap-3">
+            {statusOptions.map((status) => {
+              const Icon = status.icon;
+              const isSelected = selectedStatus === status.value;
+              const isCurrent = currentStatus === status.value;
+              const isDisabled = isCurrent;
 
-          {/* Selected Status Info */}
-          {selectedStatusData && (
-            <div className={cn(
-              "p-4 sm:p-5 rounded-xl border-2 transition-all animate-fade-in",
-              selectedStatusData.bgGradient,
-              selectedStatusData.borderColor
-            )}>
-              <div className="flex items-start gap-3 sm:gap-4">
-                <div className={cn(
-                  "p-2.5 sm:p-3 rounded-lg shrink-0",
-                  selectedStatusData.iconBg
-                )}>
-                  {(() => {
-                    const Icon = selectedStatusData.icon;
-                    return <Icon className={cn("w-5 h-5 sm:w-6 sm:h-6", selectedStatusData.color)} />;
-                  })()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <h3 className="font-bold text-base sm:text-lg">{selectedStatusData.label}</h3>
-                    {selectedStatus !== currentStatus && (
-                      <div className="flex items-center gap-1 text-xs text-primary">
-                        <ArrowRight className="w-3 h-3" />
-                        <span className="font-medium">New Status</span>
+              return (
+                <button
+                  key={status.value}
+                  onClick={() => !isDisabled && setSelectedStatus(status.value)}
+                  disabled={isDisabled}
+                  className={cn(
+                    "relative overflow-hidden group",
+                    "p-3.5 sm:p-4 rounded-xl border-2 transition-all duration-300",
+                    "bg-gradient-to-br",
+                    status.gradientFrom,
+                    status.gradientTo,
+                    status.borderColor,
+                    !isDisabled && status.hoverBorder,
+                    "hover:shadow-lg",
+                    !isDisabled && status.glowColor,
+                    isSelected && !isCurrent && "ring-2 ring-primary ring-offset-2 ring-offset-background scale-[1.02]",
+                    isDisabled && "opacity-50 cursor-not-allowed",
+                    !isDisabled && "cursor-pointer active:scale-[0.98]"
+                  )}
+                >
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    {/* Icon */}
+                    <div className={cn(
+                      "flex items-center justify-center shrink-0",
+                      "w-11 h-11 sm:w-14 sm:h-14 rounded-xl",
+                      "bg-gradient-to-br",
+                      status.iconBgStart,
+                      status.iconBgEnd,
+                      "backdrop-blur-sm",
+                      "transition-transform duration-300",
+                      !isDisabled && "group-hover:scale-110"
+                    )}>
+                      <Icon className={cn(
+                        "w-5 h-5 sm:w-7 sm:h-7",
+                        status.color
+                      )} />
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 text-left min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5 sm:mb-1">
+                        <h3 className={cn(
+                          "font-bold text-sm sm:text-base",
+                          status.color
+                        )}>
+                          {status.label}
+                        </h3>
+                        {isCurrent && (
+                          <span className="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full bg-primary/20 text-primary font-semibold">
+                            ACTIVE
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-1 sm:line-clamp-none">
+                        {status.description}
+                      </p>
+                    </div>
+
+                    {/* Selection Indicator */}
+                    {isSelected && !isCurrent && (
+                      <div className={cn(
+                        "absolute top-2 right-2 sm:top-3 sm:right-3",
+                        "w-6 h-6 sm:w-7 sm:h-7 rounded-full",
+                        "bg-gradient-to-r from-primary to-accent",
+                        "flex items-center justify-center",
+                        "animate-scale-in shadow-lg"
+                      )}>
+                        <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary-foreground" />
                       </div>
                     )}
                   </div>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
-                    {selectedStatusData.description}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
 
-          {/* Note Section */}
-          {selectedStatus !== currentStatus && (
-            <div className="animate-fade-in space-y-2.5">
-              <Label htmlFor="note" className="text-xs sm:text-sm font-semibold flex items-center gap-2">
-                Add Update Note
-                <span className="text-[10px] sm:text-xs text-muted-foreground font-normal">(Optional)</span>
-              </Label>
-              <Textarea
-                id="note"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Provide additional context about this status change..."
-                rows={3}
-                className="resize-none bg-background/50 text-xs sm:text-sm border-border focus:border-primary/50 transition-colors"
-              />
-            </div>
-          )}
+                  {/* Hover Effect Overlay */}
+                  {!isDisabled && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-2 border-t border-border">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2 border-t border-border">
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={updating}
-              className="w-full sm:w-auto text-sm border-border hover:bg-muted"
+              className="w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10"
             >
               Cancel
             </Button>
@@ -229,22 +227,23 @@ export const StatusUpdateDialog = ({
               onClick={handleUpdate}
               disabled={updating || selectedStatus === currentStatus}
               className={cn(
-                "w-full sm:w-auto text-sm font-semibold transition-all",
+                "w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-10",
                 "bg-gradient-to-r from-primary to-accent hover:opacity-90",
-                "disabled:opacity-50 disabled:cursor-not-allowed"
+                "transition-all duration-300",
+                "disabled:opacity-50"
               )}
             >
               {updating ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2 animate-spin" />
-                  Updating Status...
+                  <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
+                  Updating...
                 </>
               ) : selectedStatus === currentStatus ? (
-                "Select Different Status"
+                "Select New Status"
               ) : (
                 <>
-                  <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-2" />
-                  Confirm Update
+                  <Check className="w-3.5 h-3.5 mr-2" />
+                  Update Status
                 </>
               )}
             </Button>

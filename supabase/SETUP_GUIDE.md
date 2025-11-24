@@ -62,32 +62,30 @@ This will create:
 
 ## Step 4: Deploy Edge Functions
 
-1. Install Supabase CLI if you haven't already:
+**For detailed edge function setup, deployment, and code, see [EDGE_FUNCTIONS_GUIDE.md](./EDGE_FUNCTIONS_GUIDE.md)**
 
+Quick deployment steps:
+
+1. Install Supabase CLI:
 ```bash
 npm install -g supabase
 ```
 
-2. Login to Supabase CLI:
-
+2. Login and link project:
 ```bash
 supabase login
-```
-
-3. Link your project (replace PROJECT_ID with your actual project ID):
-
-```bash
 supabase link --project-ref YOUR_PROJECT_ID
 ```
 
-4. Deploy the edge functions:
-
+3. Deploy all functions:
 ```bash
-supabase functions deploy delete-account
+supabase functions deploy
 ```
 
 **Available Edge Functions:**
 - `delete-account`: Handles secure account deletion with cascade delete of all user data
+
+For complete code, troubleshooting, and advanced configuration, refer to the Edge Functions Guide.
 
 ## Step 5: Configure Storage Bucket (Automated via setup.sql)
 

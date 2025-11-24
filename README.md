@@ -654,7 +654,8 @@ tellus/
 │   └── vite-env.d.ts          # Vite environment types
 │
 ├── supabase/                  # Supabase backend configuration
-│   ├── SETUP_GUIDE.md         # Complete setup documentation
+│   ├── SETUP_GUIDE.md         # Complete database setup documentation
+│   ├── EDGE_FUNCTIONS_GUIDE.md # Edge functions deployment guide
 │   ├── config.toml            # Supabase project & edge function config
 │   ├── setup.sql              # Single comprehensive database setup file
 │   ├── migrations/            # Database migrations (auto-generated)
@@ -865,12 +866,12 @@ Quick overview:
    - Copy and run the entire `supabase/setup.sql` file
    - This single file creates all tables, functions, triggers, and RLS policies
 
-3. **Deploy Edge Functions** (Optional - for account deletion):
+3. **Deploy Edge Functions** (for account deletion):
    ```bash
-   supabase login
-   supabase link --project-ref YOUR_PROJECT_ID
-   supabase functions deploy delete-account
+   supabase functions deploy
    ```
+   
+   See [Edge Functions Guide](./supabase/EDGE_FUNCTIONS_GUIDE.md) for complete code and detailed instructions.
 
 **Note**: The `setup.sql` file is the only database setup file you need. All migrations and other setup scripts are generated automatically.
 

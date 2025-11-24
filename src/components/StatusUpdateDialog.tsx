@@ -92,129 +92,113 @@ export const StatusUpdateDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] sm:max-w-2xl glass-card border-primary/30 p-3 sm:p-5 max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="space-y-2 pb-3">
+      <DialogContent className="max-w-[95vw] sm:max-w-lg glass-card border-primary/30 p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="space-y-2 pb-2">
           <DialogTitle className="gradient-text text-base sm:text-xl flex items-center gap-2">
             <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
-            Change Status
+            Update Status
           </DialogTitle>
-          <DialogDescription className="text-[11px] sm:text-sm break-words line-clamp-2">
+          <DialogDescription className="text-[11px] sm:text-sm break-words">
             {complaintTitle}
           </DialogDescription>
-          
-          {/* Current Status Indicator */}
-          {currentStatusData && (
-            <div className="flex items-center gap-2 pt-1">
-              <span className="text-[10px] sm:text-xs text-muted-foreground font-medium">Currently:</span>
-              <div className={cn(
-                "flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold",
-                "bg-gradient-to-r",
-                currentStatusData.iconBgStart,
-                currentStatusData.iconBgEnd,
-                currentStatusData.color
-              )}>
-                {(() => {
-                  const Icon = currentStatusData.icon;
-                  return <Icon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />;
-                })()}
-                <span>{currentStatusData.label}</span>
-              </div>
-            </div>
-          )}
         </DialogHeader>
 
-        <div className="space-y-3 sm:space-y-4 pt-2">
-          {/* Status Cards Grid */}
-          <div className="grid gap-2.5 sm:gap-3">
-            {statusOptions.map((status) => {
-              const Icon = status.icon;
-              const isSelected = selectedStatus === status.value;
-              const isCurrent = currentStatus === status.value;
-              const isDisabled = isCurrent;
+        <div className="space-y-4 pt-1">
+          {/* Current Status Summary */}
+          {currentStatusData && (
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background/60 px-3 py-2.5 sm:px-4 sm:py-3">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] sm:text-xs font-semibold text-primary">
+                  Current: {currentStatusData.label}
+                </div>
+                <p className="hidden sm:block text-xs text-muted-foreground truncate">
+                  Choose a new status below and confirm to update.
+                </p>
+              </div>
+              <span className="text-[10px] sm:text-xs text-muted-foreground">
+                Step 1 of 2
+              </span>
+            </div>
+          )}
 
-              return (
-                <button
-                  key={status.value}
-                  onClick={() => !isDisabled && setSelectedStatus(status.value)}
-                  disabled={isDisabled}
-                  className={cn(
-                    "relative overflow-hidden group",
-                    "p-3.5 sm:p-4 rounded-xl border-2 transition-all duration-300",
-                    "bg-gradient-to-br",
-                    status.gradientFrom,
-                    status.gradientTo,
-                    status.borderColor,
-                    !isDisabled && status.hoverBorder,
-                    "hover:shadow-lg",
-                    !isDisabled && status.glowColor,
-                    isSelected && !isCurrent && "ring-2 ring-primary ring-offset-2 ring-offset-background scale-[1.02]",
-                    isDisabled && "opacity-50 cursor-not-allowed",
-                    !isDisabled && "cursor-pointer active:scale-[0.98]"
-                  )}
-                >
-                  <div className="flex items-center gap-3 sm:gap-4">
-                    {/* Icon */}
-                    <div className={cn(
-                      "flex items-center justify-center shrink-0",
-                      "w-11 h-11 sm:w-14 sm:h-14 rounded-xl",
-                      "bg-gradient-to-br",
-                      status.iconBgStart,
-                      status.iconBgEnd,
-                      "backdrop-blur-sm",
-                      "transition-transform duration-300",
-                      !isDisabled && "group-hover:scale-110"
-                    )}>
-                      <Icon className={cn(
-                        "w-5 h-5 sm:w-7 sm:h-7",
-                        status.color
-                      )} />
+          {/* Status Selection List */}
+          <div className="space-y-2">
+            <p className="text-[11px] sm:text-xs font-medium text-muted-foreground">
+              Select the new status
+            </p>
+
+            <div className="flex flex-col gap-2">
+              {statusOptions.map((status) => {
+                const Icon = status.icon;
+                const isSelected = selectedStatus === status.value;
+                const isCurrent = currentStatus === status.value;
+                const isDisabled = isCurrent;
+
+                return (
+                  <button
+                    key={status.value}
+                    type="button"
+                    disabled={isDisabled}
+                    onClick={() => !isDisabled && setSelectedStatus(status.value)}
+                    className={cn(
+                      "w-full rounded-lg border bg-background/60 px-3 py-2.5 sm:px-4 sm:py-3 text-left transition-all duration-200",
+                      "flex items-center gap-3 sm:gap-4",
+                      "hover:bg-accent/40",
+                      isSelected && !isCurrent && "border-primary bg-primary/5 shadow-md",
+                      isDisabled && "cursor-not-allowed opacity-60",
+                    )}
+                  >
+                    {/* Icon bubble */}
+                    <div
+                      className={cn(
+                        "flex h-9 w-9 items-center justify-center rounded-full border text-muted-foreground shrink-0",
+                        isCurrent && "bg-primary text-primary-foreground border-primary",
+                        !isCurrent && isSelected && "border-primary/70 text-primary",
+                      )}
+                    >
+                      <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
 
-                    {/* Content */}
-                    <div className="flex-1 text-left min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5 sm:mb-1">
-                        <h3 className={cn(
-                          "font-bold text-sm sm:text-base",
-                          status.color
-                        )}>
+                    {/* Text content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm sm:text-base font-semibold">
                           {status.label}
                         </h3>
                         {isCurrent && (
-                          <span className="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-full bg-primary/20 text-primary font-semibold">
-                            ACTIVE
+                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold text-primary">
+                            CURRENT
+                          </span>
+                        )}
+                        {!isCurrent && isSelected && (
+                          <span className="rounded-full bg-accent/20 px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold text-accent-foreground">
+                            SELECTED
                           </span>
                         )}
                       </div>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-1 sm:line-clamp-none">
+                      <p className="mt-0.5 text-[10px] sm:text-xs text-muted-foreground line-clamp-2">
                         {status.description}
                       </p>
                     </div>
 
-                    {/* Selection Indicator */}
-                    {isSelected && !isCurrent && (
-                      <div className={cn(
-                        "absolute top-2 right-2 sm:top-3 sm:right-3",
-                        "w-6 h-6 sm:w-7 sm:h-7 rounded-full",
-                        "bg-gradient-to-r from-primary to-accent",
-                        "flex items-center justify-center",
-                        "animate-scale-in shadow-lg"
-                      )}>
-                        <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary-foreground" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Hover Effect Overlay */}
-                  {!isDisabled && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  )}
-                </button>
-              );
-            })}
+                    {/* Selection indicator */}
+                    <div className="shrink-0">
+                      {isSelected && !isCurrent ? (
+                        <div className="flex h-5 w-5 items-center justify-center rounded-full border border-primary bg-primary/10">
+                          <Check className="w-3 h-3 text-primary" />
+                        </div>
+                      ) : (
+                        <div className="h-5 w-5 rounded-full border border-border" />
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2 border-t border-border">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-3 border-t border-border">
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
@@ -230,7 +214,7 @@ export const StatusUpdateDialog = ({
                 "w-full sm:w-auto text-xs sm:text-sm font-semibold h-9 sm:h-10",
                 "bg-gradient-to-r from-primary to-accent hover:opacity-90",
                 "transition-all duration-300",
-                "disabled:opacity-50"
+                "disabled:opacity-50",
               )}
             >
               {updating ? (

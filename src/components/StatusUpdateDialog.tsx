@@ -106,18 +106,10 @@ export const StatusUpdateDialog = ({
         <div className="space-y-4 pt-1">
           {/* Current Status Summary */}
           {currentStatusData && (
-            <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background/60 px-3 py-2.5 sm:px-4 sm:py-3">
-              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                <div className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] sm:text-xs font-semibold text-primary">
-                  Current: {currentStatusData.label}
-                </div>
-                <p className="hidden sm:block text-xs text-muted-foreground truncate">
-                  Choose a new status below and confirm to update.
-                </p>
+            <div className="flex items-center gap-3 rounded-lg border border-border bg-background/60 px-3 py-2.5 sm:px-4 sm:py-3">
+              <div className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] sm:text-xs font-semibold text-primary">
+                Current: {currentStatusData.label}
               </div>
-              <span className="text-[10px] sm:text-xs text-muted-foreground">
-                Step 1 of 2
-              </span>
             </div>
           )}
 

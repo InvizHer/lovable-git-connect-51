@@ -204,22 +204,23 @@ In schools, colleges, and many organizations, physical complaint boxes have been
 - **Sonner**: Beautiful toast notifications
 - **next-themes**: Dark mode support with system preference detection
 
-### Backend Infrastructure
+### Backend Infrastructure (Supabase)
+
+TellUs uses **Supabase** as its complete backend solution. All database operations, authentication, storage, and serverless functions are powered by your own Supabase project.
 
 #### Database & Authentication
-- **Supabase**: Open-source Firebase alternative
-  - **PostgreSQL 15**: Robust relational database
-  - **Auth**: Built-in authentication with JWT tokens
-  - **Storage**: File storage with access controls
-  - **Edge Functions**: Deno-based serverless functions
-  - **Realtime**: WebSocket-based real-time subscriptions
+- **PostgreSQL 15**: Robust relational database
+- **Supabase Auth**: Built-in authentication with JWT tokens
+- **Storage**: File storage with access controls (complaint-attachments bucket)
+- **Edge Functions**: Deno-based serverless functions
+- **Realtime**: WebSocket-based real-time subscriptions (optional)
 
 #### Security Features
-- **Row-Level Security (RLS)**: Database-level access control
+- **Row-Level Security (RLS)**: Database-level access control on all tables
 - **JWT Tokens**: Secure authentication tokens
 - **Bcrypt Hashing**: Secure password storage (via Supabase Auth)
 - **HTTPS**: Encrypted data transmission
-- **CORS**: Cross-Origin Resource Sharing configuration
+- **CORS**: Proper cross-origin configuration for edge functions
 
 ### Development Tools
 
@@ -652,12 +653,13 @@ tellus/
 │   ├── index.css              # Global styles & design system
 │   └── vite-env.d.ts          # Vite environment types
 │
-├── supabase/                  # Supabase configuration
-│   ├── config.toml            # Supabase project configuration
-│   ├── setup.sql              # Complete database setup script
+├── supabase/                  # Supabase backend configuration
+│   ├── SETUP_GUIDE.md         # Complete setup documentation
+│   ├── config.toml            # Supabase project & edge function config
+│   ├── setup.sql              # Single comprehensive database setup file
 │   ├── migrations/            # Database migrations (auto-generated)
 │   └── functions/             # Edge functions
-│       └── delete-account/    # Account deletion function
+│       └── delete-account/    # Secure account deletion function
 │           └── index.ts
 │
 ├── .env                       # Environment variables (not in git)
@@ -702,9 +704,13 @@ Custom React hooks for reusable logic:
 
 #### `/supabase/`
 Backend configuration and scripts:
-- `setup.sql`: Complete database schema in a single file
-- `functions/`: Serverless edge functions
-- `migrations/`: Auto-generated migration files
+- **`SETUP_GUIDE.md`**: Complete step-by-step setup instructions
+- **`setup.sql`**: Single comprehensive database setup file (run this once)
+- **`config.toml`**: Supabase project configuration and edge function settings
+- **`functions/`**: Serverless edge functions (delete-account)
+- **`migrations/`**: Auto-generated migration files (don't edit manually)
+
+**Important**: Use only `setup.sql` for database setup - it contains everything you need.
 
 ---
 
@@ -844,57 +850,45 @@ This will install all required packages:
 - Supabase client, TanStack Query
 - All other dependencies from package.json
 
-### Step 3: Set Up Supabase Project
+### Step 3: Set Up Supabase Backend
+
+**For complete, step-by-step setup instructions, see [SETUP_GUIDE.md](supabase/SETUP_GUIDE.md)**
+
+Quick overview:
 
 1. **Create a Supabase Project**:
-   - Go to [https://supabase.com](https://supabase.com)
-   - Click "New Project"
-   - Fill in project details:
-     - Name: TellUs
-     - Database Password: (choose a strong password)
-     - Region: (select closest to your users)
-   - Wait for project initialization (~2 minutes)
+   - Sign up at [https://supabase.com](https://supabase.com)
+   - Create a new project and copy your credentials
 
-2. **Get API Credentials**:
-   - Go to Project Settings → API
-   - Copy the following:
-     - Project URL (e.g., `https://xxxxx.supabase.co`)
-     - Anon/Public Key (starts with `eyJ...`)
+2. **Run Complete Database Setup**:
+   - Open Supabase SQL Editor
+   - Copy and run the entire `supabase/setup.sql` file
+   - This single file creates all tables, functions, triggers, and RLS policies
 
-3. **Run Database Setup**:
-   - Go to SQL Editor in Supabase Dashboard
-   - Create a new query
-   - Copy the entire contents of `supabase/setup.sql`
-   - Paste and click "Run"
-   - Wait for completion (should show "Success")
+3. **Deploy Edge Functions** (Optional - for account deletion):
+   ```bash
+   supabase login
+   supabase link --project-ref YOUR_PROJECT_ID
+   supabase functions deploy delete-account
+   ```
 
-4. **Enable Email Authentication**:
-   - Go to Authentication → Providers
-   - Enable "Email" provider
-   - Configure email templates (optional)
-   - Save changes
-
-5. **Configure Storage**:
-   - Go to Storage
-   - Verify `complaint-attachments` bucket exists
-   - Check policies are applied correctly
+**Note**: The `setup.sql` file is the only database setup file you need. All migrations and other setup scripts are generated automatically.
 
 ### Step 4: Configure Environment Variables
 
 Create a `.env` file in the project root:
 
 ```env
-# Supabase Configuration
+# Supabase Configuration (get these from your Supabase project dashboard)
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key-here
 VITE_SUPABASE_PROJECT_ID=your-project-id
-
-# Optional: Custom Configuration
-VITE_APP_NAME=TellUs
-VITE_APP_VERSION=1.0.0
 ```
 
-⚠️ **Important**: Never commit `.env` file to version control!
+⚠️ **Important**: 
+- Never commit `.env` file to version control!
+- Get these values from Supabase Dashboard → Settings → API
+- TellUs connects **only** to your Supabase project - no third-party services
 
 ### Step 5: Start Development Server
 
@@ -1335,12 +1329,25 @@ docker run -p 80:80 tellus
 
 ## 🔐 Security Features
 
+### Database Connection Security
+
+**TellUs connects exclusively to your Supabase project** - there are no third-party database services or cloud platforms involved. All data is stored in your own Supabase PostgreSQL database.
+
+- ✅ **Direct Supabase Connection**: Uses only the Supabase client library
+- ✅ **No External Services**: All data stays in your Supabase project
+- ✅ **Full Data Ownership**: You own and control all data
+- ✅ **Secure Credentials**: API keys stored in environment variables only
+- ✅ **RLS Enforcement**: All database access controlled by Row Level Security policies
+
+**Configuration**: Check `src/integrations/supabase/client.ts` - it uses only your Supabase credentials from `.env`
+
 ### Authentication Security
 
 1. **Password Hashing**: Bcrypt via Supabase Auth
 2. **JWT Tokens**: Secure session management
 3. **Token Refresh**: Automatic token renewal
 4. **Session Persistence**: Secure localStorage storage
+5. **Edge Function Auth**: JWT verification on serverless functions
 
 ### Data Protection
 
@@ -1400,11 +1407,21 @@ docker run -p 80:80 tellus
 2. Check for typos in environment variables
 3. Restart development server after env changes
 
-#### Issue: "Database connection failed"
+#### Issue: "Database connection failed" or "Failed to send request to edge function"
 **Solution**:
-1. Verify Supabase project is active
-2. Check internet connection
-3. Ensure RLS policies are properly set up
+1. **Verify Supabase project is active** in your Supabase dashboard
+2. **Check internet connection**
+3. **Ensure edge functions are deployed**:
+   ```bash
+   supabase functions list
+   ```
+4. **Verify config.toml** has the correct project_id and function configuration
+5. **Check RLS policies** are properly set up via setup.sql
+6. **Restart development server** after any Supabase changes
+7. **For edge function errors**: Deploy the function using:
+   ```bash
+   supabase functions deploy delete-account
+   ```
 
 #### Issue: "File upload fails"
 **Solution**:

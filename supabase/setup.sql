@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 -- Stores complaint boxes created by admins
 CREATE TABLE IF NOT EXISTS public.complaint_boxes (
   id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
-  admin_id UUID NOT NULL,
+  admin_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   description TEXT,
   category TEXT NOT NULL,
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS public.complaint_boxes (
 -- Stores complaints submitted anonymously by users
 CREATE TABLE IF NOT EXISTS public.complaints (
   id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
-  box_id UUID NOT NULL,
+  box_id UUID NOT NULL REFERENCES public.complaint_boxes(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   message TEXT NOT NULL,
   complaint_category TEXT NOT NULL,
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS public.complaints (
 -- Stores anonymous feedback ratings for complaint boxes
 CREATE TABLE IF NOT EXISTS public.feedbacks (
   id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
-  box_id UUID NOT NULL,
+  box_id UUID NOT NULL REFERENCES public.complaint_boxes(id) ON DELETE CASCADE,
   rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
   message TEXT,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS public.feedbacks (
 -- Stores daily analytics data aggregated for complaint boxes
 CREATE TABLE IF NOT EXISTS public.analytics (
   id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
-  box_id UUID NOT NULL,
+  box_id UUID NOT NULL REFERENCES public.complaint_boxes(id) ON DELETE CASCADE,
   date DATE NOT NULL DEFAULT CURRENT_DATE,
   total_complaints INTEGER NOT NULL DEFAULT 0,
   received_count INTEGER NOT NULL DEFAULT 0,

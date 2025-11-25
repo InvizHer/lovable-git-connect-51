@@ -9,7 +9,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Lock, Mail } from "lucide-react";
 import FrontendHeader from "@/components/FrontendHeader";
 import Footer from "@/components/Footer";
-import { motion } from "framer-motion";
 import SEOHead from "@/components/SEOHead";
 
 const Login = () => {
@@ -64,22 +63,12 @@ const Login = () => {
         <div className="absolute inset-0 bg-[var(--gradient-primary)] opacity-5" />
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnoiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjIiIG9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-10" />
         
-        <motion.div
-          className="w-full max-w-md relative z-10"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
+        <div className="w-full max-w-md relative z-10">
           <Card className="glass-card shadow-[var(--shadow-strong)] border-2">
             <CardHeader className="space-y-3 text-center">
-              <motion.div 
-                className="mx-auto p-3 rounded-2xl bg-gradient-to-br from-primary to-accent w-fit"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", delay: 0.2 }}
-              >
+              <div className="mx-auto p-3 rounded-2xl bg-gradient-to-br from-primary to-accent w-fit">
                 <Lock className="h-8 w-8 text-white" />
-              </motion.div>
+              </div>
               <CardTitle className="text-3xl sm:text-4xl font-bold gradient-text">Welcome Back</CardTitle>
               <CardDescription className="text-base">
                 Login to manage your complaint boxes
@@ -151,7 +140,7 @@ const Login = () => {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       </div>
       
       <Footer />

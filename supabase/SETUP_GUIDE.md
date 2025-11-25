@@ -60,34 +60,7 @@ This will create:
 
 **Note**: The setup.sql file contains all necessary queries. You only need to run this file once.
 
-## Step 4: Deploy Edge Functions
-
-**For detailed edge function setup, deployment, and code, see [EDGE_FUNCTIONS_GUIDE.md](./EDGE_FUNCTIONS_GUIDE.md)**
-
-Quick deployment steps:
-
-1. Install Supabase CLI:
-```bash
-npm install -g supabase
-```
-
-2. Login and link project:
-```bash
-supabase login
-supabase link --project-ref YOUR_PROJECT_ID
-```
-
-3. Deploy all functions:
-```bash
-supabase functions deploy
-```
-
-**Available Edge Functions:**
-- `delete-account`: Handles secure account deletion with cascade delete of all user data
-
-For complete code, troubleshooting, and advanced configuration, refer to the Edge Functions Guide.
-
-## Step 5: Configure Storage Bucket (Automated via setup.sql)
+## Step 4: Verify Setup
 
 The storage bucket `complaint-attachments` is automatically created when you run setup.sql.
 
@@ -124,17 +97,13 @@ Expected tables:
 3. Create a test account
 4. Verify you can login
 
-### Test Edge Functions
-
-In your application, try to delete the test account from profile settings to verify the edge function works.
-
 ## Security Checklist
 
 ✅ Row Level Security (RLS) enabled on all tables  
 ✅ Authentication configured with JWT tokens  
 ✅ Storage policies restrict file access appropriately  
-✅ Edge functions use proper authentication  
 ✅ Environment variables stored securely (not committed to git)  
+✅ CASCADE delete rules configured for data integrity
 
 ## Database Schema Overview
 
@@ -176,12 +145,30 @@ FROM pg_tables
 WHERE schemaname = 'public';
 ```
 
-### Issue: Edge function returns 401 Unauthorized
+### Issue: Complaint box deletion not removing related data
 
-**Solution**: 
-1. Verify the function is deployed: `supabase functions list`
-2. Check that `verify_jwt = true` is set in config.toml
-3. Ensure Authorization header is being sent with requests
+**Solution**: Verify CASCADE delete rules are set up correctly:
+
+```sql
+-- Check foreign key constraints
+SELECT
+    tc.table_name, 
+    tc.constraint_name, 
+    kcu.column_name,
+    ccu.table_name AS foreign_table_name,
+    rc.delete_rule
+FROM information_schema.table_constraints AS tc
+JOIN information_schema.key_column_usage AS kcu
+  ON tc.constraint_name = kcu.constraint_name
+JOIN information_schema.constraint_column_usage AS ccu
+  ON ccu.constraint_name = tc.constraint_name
+JOIN information_schema.referential_constraints AS rc
+  ON tc.constraint_name = rc.constraint_name
+WHERE tc.constraint_type = 'FOREIGN KEY'
+  AND tc.table_schema = 'public';
+```
+
+If CASCADE rules are missing, re-run the setup.sql file.
 
 ### Issue: File uploads failing
 

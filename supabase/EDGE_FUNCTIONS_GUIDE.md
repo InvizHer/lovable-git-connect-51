@@ -1,26 +1,12 @@
-# TellUs - Edge Functions Setup Guide
+# TellUs - Edge Functions Guide & Template
 
-This guide provides complete instructions for setting up and deploying Supabase Edge Functions for TellUs.
+This guide provides instructions for creating and deploying custom Supabase Edge Functions for TellUs when needed.
 
 ## Prerequisites
 
 - Supabase CLI installed (`npm install -g supabase`)
 - Supabase account and project set up
 - Project linked to Supabase CLI
-
-## Available Edge Functions
-
-### 1. delete-account
-
-Handles secure account deletion with cascade delete of all user data.
-
-**Location**: `supabase/functions/delete-account/index.ts`
-
-**Purpose**: Securely deletes a user account and all associated data (profiles, complaint boxes, complaints)
-
-**Authentication**: Required (JWT verification enabled)
-
----
 
 ## Installation Steps
 
@@ -48,34 +34,55 @@ Replace `YOUR_PROJECT_ID` with your actual Supabase project ID (found in project
 
 ### Step 4: Verify Configuration
 
-Check that `supabase/config.toml` has the correct settings:
+Check that `supabase/config.toml` has the correct project ID:
 
 ```toml
 project_id = "your-project-id"
-
-[functions.delete-account]
-verify_jwt = true
 ```
 
 ---
 
-## Edge Function Code
+## Creating a New Edge Function
 
-### delete-account Function
+### Step 1: Create Function Directory
 
-**File**: `supabase/functions/delete-account/index.ts`
+```bash
+mkdir -p supabase/functions/your-function-name
+```
+
+### Step 2: Create index.ts File
+
+Create `supabase/functions/your-function-name/index.ts`
+
+### Edge Function Template
+
+Here's a basic template for creating authenticated edge functions:
 
 ```typescript
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.80.0'
 
+// CORS headers for web app access
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
 Deno.serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
+  }
+
   try {
     // Get the authorization header
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: 'No authorization header' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
       )
     }
 
@@ -92,44 +99,72 @@ Deno.serve(async (req) => {
     if (userError || !user) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
       )
     }
 
-    // Create admin client for deletion
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    // Your function logic here
+    console.log('Function called by user:', user.id)
 
-    // Delete the user - this will cascade delete:
-    // 1. profiles (via auth.users cascade)
-    // 2. complaint_boxes (via admin_id cascade)
-    // 3. complaints (via box_id cascade from complaint_boxes)
-    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id)
+    // Example: Parse request body
+    const body = await req.json()
+    console.log('Request body:', body)
 
-    if (deleteError) {
-      console.error('Delete error:', deleteError)
-      return new Response(
-        JSON.stringify({ error: deleteError.message }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      )
+    // Example: Database operations using the client
+    const { data, error } = await supabaseClient
+      .from('your_table')
+      .select('*')
+      .eq('user_id', user.id)
+
+    if (error) {
+      throw error
     }
 
+    // Return success response
     return new Response(
-      JSON.stringify({ success: true, message: 'Account deleted successfully' }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+      JSON.stringify({ 
+        success: true, 
+        message: 'Operation completed successfully',
+        data: data 
+      }),
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     )
+
   } catch (error) {
-    console.error('Error:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.error('Function error:', error)
     return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      JSON.stringify({ 
+        error: error.message || 'Internal server error' 
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     )
   }
 })
 ```
+
+### Step 3: Configure Function Settings
+
+Add your function configuration to `supabase/config.toml`:
+
+```toml
+project_id = "your-project-id"
+
+[functions.your-function-name]
+verify_jwt = true  # Set to false for public functions (webhooks, etc.)
+```
+
+**Security Note**: 
+- `verify_jwt = true` - Requires authentication (recommended for most functions)
+- `verify_jwt = false` - Public access (only use for webhooks or public APIs)
 
 ---
 
@@ -144,7 +179,7 @@ supabase functions deploy
 ### Deploy Specific Function
 
 ```bash
-supabase functions deploy delete-account
+supabase functions deploy your-function-name
 ```
 
 ### Verify Deployment
@@ -153,91 +188,135 @@ supabase functions deploy delete-account
 supabase functions list
 ```
 
-You should see output like:
-```
-┌─────────────────┬──────────┬─────────────────────────┬─────────┐
-│ NAME            │ VERSION  │ CREATED AT              │ STATUS  │
-├─────────────────┼──────────┼─────────────────────────┼─────────┤
-│ delete-account  │ 1        │ 2024-01-15 10:30:00     │ ACTIVE  │
-└─────────────────┴──────────┴─────────────────────────┴─────────┘
-```
-
 ---
 
-## Testing Edge Functions
+## Calling Edge Functions from Frontend
 
-### Test delete-account Function
+### Example: Call from React Component
 
-1. **Via Application UI**:
-   - Login to your application
-   - Navigate to Profile page (`/profile`)
-   - Click "Delete Account"
-   - Confirm deletion
-   - Check if account and all data is deleted
+```typescript
+import { supabase } from "@/integrations/supabase/client";
 
-2. **Via cURL**:
+const callEdgeFunction = async () => {
+  try {
+    const { data, error } = await supabase.functions.invoke('your-function-name', {
+      body: { 
+        // Your request payload
+        param1: 'value1',
+        param2: 'value2'
+      }
+    });
 
-```bash
-curl -X POST \
-  'https://YOUR_PROJECT_ID.supabase.co/functions/v1/delete-account' \
-  -H 'Authorization: Bearer YOUR_USER_JWT_TOKEN' \
-  -H 'Content-Type: application/json'
-```
+    if (error) throw error;
 
-Replace:
-- `YOUR_PROJECT_ID` with your Supabase project ID
-- `YOUR_USER_JWT_TOKEN` with a valid JWT token (get from browser dev tools when logged in)
-
-3. **Expected Response**:
-
-Success:
-```json
-{
-  "success": true,
-  "message": "Account deleted successfully"
-}
-```
-
-Error:
-```json
-{
-  "error": "Unauthorized"
-}
+    console.log('Function response:', data);
+    return data;
+  } catch (error) {
+    console.error('Error calling edge function:', error);
+    throw error;
+  }
+};
 ```
 
 ---
 
 ## Environment Variables
 
-Edge functions automatically have access to these environment variables:
+Edge functions have access to these environment variables automatically:
 
-- `SUPABASE_URL`: Your project URL
-- `SUPABASE_ANON_KEY`: Anonymous/public key
-- `SUPABASE_SERVICE_ROLE_KEY`: Service role key (admin access)
+- `SUPABASE_URL` - Your Supabase project URL
+- `SUPABASE_ANON_KEY` - Your Supabase anon/public key
+- `SUPABASE_SERVICE_ROLE_KEY` - Your service role key (for admin operations)
+- `SUPABASE_DB_URL` - Direct database connection URL
 
-**No manual configuration needed** - these are automatically injected by Supabase.
+### Adding Custom Secrets
+
+```bash
+supabase secrets set MY_SECRET_KEY=your_secret_value
+```
+
+Access in function:
+```typescript
+const secretKey = Deno.env.get('MY_SECRET_KEY')
+```
 
 ---
 
-## Monitoring and Logs
+## Testing Edge Functions
+
+### Local Testing
+
+```bash
+# Start local Supabase
+supabase start
+
+# Serve function locally
+supabase functions serve your-function-name
+```
+
+### Test with cURL
+
+```bash
+curl -i --location --request POST \
+  'https://YOUR_PROJECT_ID.supabase.co/functions/v1/your-function-name' \
+  --header 'Authorization: Bearer YOUR_ANON_KEY' \
+  --header 'Content-Type: application/json' \
+  --data '{"key":"value"}'
+```
+
+---
+
+## Monitoring & Logs
 
 ### View Function Logs
 
-1. **Via Supabase Dashboard**:
-   - Go to **Edge Functions** section
-   - Click on function name
-   - View **Logs** tab
-
-2. **Via CLI**:
-
 ```bash
-supabase functions logs delete-account
+supabase functions logs your-function-name
 ```
 
-Add `--follow` to watch logs in real-time:
-```bash
-supabase functions logs delete-account --follow
-```
+### View in Dashboard
+
+1. Go to Supabase Dashboard
+2. Navigate to Edge Functions
+3. Click on your function
+4. View Logs tab
+
+---
+
+## Common Use Cases
+
+### 1. Sending Emails
+Use services like SendGrid, Mailgun, or Resend to send transactional emails.
+
+### 2. Payment Processing
+Integrate with Stripe, PayPal, or other payment gateways securely.
+
+### 3. External API Integration
+Call third-party APIs with your API keys safely stored as secrets.
+
+### 4. Complex Database Operations
+Perform operations that require service_role key or complex transactions.
+
+### 5. Scheduled Tasks
+Set up cron jobs to run periodic maintenance tasks.
+
+### 6. Webhooks
+Receive and process webhooks from external services.
+
+---
+
+## Best Practices
+
+1. **Always use CORS headers** for functions called from web apps
+2. **Validate input** - Never trust user input
+3. **Use authentication** unless building a public webhook
+4. **Log important operations** for debugging
+5. **Handle errors gracefully** and return meaningful error messages
+6. **Keep functions focused** - One function should do one thing well
+7. **Use TypeScript** for better type safety
+8. **Test locally** before deploying to production
+9. **Monitor logs** regularly for errors and performance issues
+10. **Store secrets** in environment variables, never in code
 
 ---
 
@@ -245,168 +324,25 @@ supabase functions logs delete-account --follow
 
 ### Issue: Function returns 401 Unauthorized
 
-**Possible Causes**:
-1. JWT verification is enabled but no Authorization header sent
-2. Invalid or expired JWT token
-3. Token format is incorrect
+**Solution**: 
+1. Verify JWT verification is configured correctly in config.toml
+2. Check that Authorization header is being sent with requests
+3. Ensure user is authenticated before calling function
+
+### Issue: Function times out
 
 **Solution**:
-- Ensure `Authorization: Bearer <token>` header is sent with requests
-- Verify token is valid and not expired
-- Check that `verify_jwt = true` is set in `config.toml`
+1. Check function logs for errors
+2. Optimize database queries
+3. Consider increasing timeout (default is 30s)
+4. Use async operations properly
 
-### Issue: Function returns 500 Internal Server Error
-
-**Possible Causes**:
-1. Environment variables not set correctly
-2. Database connection issues
-3. Code errors in the function
+### Issue: CORS errors in browser
 
 **Solution**:
-- Check function logs: `supabase functions logs delete-account`
-- Verify all environment variables are available
-- Test database connection separately
-- Add more console.log statements for debugging
-
-### Issue: Deployment fails
-
-**Possible Causes**:
-1. Not linked to project
-2. Authentication issues
-3. Syntax errors in code
-
-**Solution**:
-```bash
-# Re-link project
-supabase link --project-ref YOUR_PROJECT_ID
-
-# Re-login
-supabase login
-
-# Check for syntax errors in TypeScript files
-deno check supabase/functions/delete-account/index.ts
-```
-
-### Issue: CASCADE delete not working
-
-**Possible Causes**:
-1. Foreign key constraints not set up correctly
-2. RLS policies blocking deletion
-
-**Solution**:
-- Verify foreign key constraints in `setup.sql`:
-```sql
--- Check foreign keys
-SELECT
-    tc.table_name, 
-    kcu.column_name,
-    ccu.table_name AS foreign_table_name,
-    ccu.column_name AS foreign_column_name,
-    rc.delete_rule
-FROM information_schema.table_constraints AS tc
-JOIN information_schema.key_column_usage AS kcu
-  ON tc.constraint_name = kcu.constraint_name
-JOIN information_schema.constraint_column_usage AS ccu
-  ON ccu.constraint_name = tc.constraint_name
-JOIN information_schema.referential_constraints AS rc
-  ON rc.constraint_name = tc.constraint_name
-WHERE tc.constraint_type = 'FOREIGN KEY';
-```
-
----
-
-## Creating New Edge Functions
-
-### 1. Create Function Directory
-
-```bash
-mkdir -p supabase/functions/your-function-name
-```
-
-### 2. Create index.ts File
-
-```bash
-touch supabase/functions/your-function-name/index.ts
-```
-
-### 3. Add Function Template
-
-```typescript
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.80.0'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-Deno.serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  try {
-    // Your function logic here
-    
-    return new Response(
-      JSON.stringify({ success: true }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
-  } catch (error) {
-    console.error('Error:', error)
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
-  }
-})
-```
-
-### 4. Update config.toml
-
-Add your function configuration:
-
-```toml
-[functions.your-function-name]
-verify_jwt = true  # or false for public functions
-```
-
-### 5. Deploy
-
-```bash
-supabase functions deploy your-function-name
-```
-
----
-
-## Best Practices
-
-1. **Always Enable JWT Verification** for protected functions
-2. **Use CORS Headers** for functions called from web browsers
-3. **Implement Error Handling** with try-catch blocks
-4. **Log Important Events** using console.log/error
-5. **Use Service Role Key** only when admin access is required
-6. **Validate Input** before processing requests
-7. **Return Consistent Response Format** (JSON with proper status codes)
-8. **Test Thoroughly** before deploying to production
-
----
-
-## Security Checklist
-
-✅ JWT verification enabled for protected functions  
-✅ Input validation implemented  
-✅ Error messages don't expose sensitive information  
-✅ Service role key used only when necessary  
-✅ CORS configured appropriately  
-✅ Logs don't contain sensitive data  
-✅ Rate limiting considered for public functions  
+1. Ensure CORS headers are included in all responses
+2. Add OPTIONS handler for preflight requests
+3. Include corsHeaders in all response objects
 
 ---
 
@@ -414,17 +350,16 @@ supabase functions deploy your-function-name
 
 - [Supabase Edge Functions Documentation](https://supabase.com/docs/guides/functions)
 - [Deno Documentation](https://deno.land/manual)
-- [Supabase CLI Reference](https://supabase.com/docs/reference/cli/introduction)
+- [Supabase CLI Reference](https://supabase.com/docs/reference/cli)
 
 ---
 
 ## Support
 
-For issues specific to TellUs edge functions:
-- Check function logs first
-- Review this guide's troubleshooting section
-- Verify database setup is complete
-- Check Supabase dashboard for function status
+For TellUs-specific issues:
+- Check the main README.md
+- Review the SETUP_GUIDE.md
+- Verify your Supabase project configuration
 
 For Supabase-specific issues:
 - Visit [Supabase Support](https://supabase.com/support)

@@ -130,8 +130,7 @@ In schools, colleges, and many organizations, physical complaint boxes have been
 #### Authentication & Security
 - **Secure Login**: Email/password authentication via Supabase
 - **Session Management**: Persistent sessions with auto-refresh tokens
-- **Profile Management**: Update username, email, password
-- **Account Deletion**: Secure account removal with cascade delete
+- **Profile Management**: Update username and password
 
 #### Complaint Box Management
 - **Create Unlimited Boxes**: No limit on complaint boxes
@@ -275,8 +274,7 @@ TellUs uses **Supabase** as its complete backend solution. All database operatio
 │  └──────────────┘  └──────────────┘  └──────────────┘     │
 │                                                              │
 │  ┌────────────────────────────────────────────────────┐    │
-│  │           Edge Functions (Deno Runtime)             │    │
-│  │         - delete-account: Account removal           │    │
+│  │           Edge Functions (No longer used)           │    │
 │  └────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -706,9 +704,9 @@ Custom React hooks for reusable logic:
 #### `/supabase/`
 Backend configuration and scripts:
 - **`SETUP_GUIDE.md`**: Complete step-by-step setup instructions
+- **`EDGE_FUNCTIONS_GUIDE.md`**: Edge functions guide and template (for custom functions)
 - **`setup.sql`**: Single comprehensive database setup file (run this once)
-- **`config.toml`**: Supabase project configuration and edge function settings
-- **`functions/`**: Serverless edge functions (delete-account)
+- **`config.toml`**: Supabase project configuration
 - **`migrations/`**: Auto-generated migration files (don't edit manually)
 
 **Important**: Use only `setup.sql` for database setup - it contains everything you need.
@@ -864,16 +862,13 @@ Quick overview:
 2. **Run Complete Database Setup**:
    - Open Supabase SQL Editor
    - Copy and run the entire `supabase/setup.sql` file
-   - This single file creates all tables, functions, triggers, and RLS policies
+   - This single file creates all tables, functions, triggers, RLS policies, and CASCADE delete rules
 
-3. **Deploy Edge Functions** (for account deletion):
-   ```bash
-   supabase functions deploy
-   ```
-   
-   See [Edge Functions Guide](./supabase/EDGE_FUNCTIONS_GUIDE.md) for complete code and detailed instructions.
-
-**Note**: The `setup.sql` file is the only database setup file you need. All migrations and other setup scripts are generated automatically.
+**Note**: The `setup.sql` file is the only database setup file you need. It includes:
+- All table definitions with foreign key CASCADE deletes
+- Row Level Security policies
+- Database triggers and functions
+- Storage bucket configuration
 
 ### Step 4: Configure Environment Variables
 
@@ -1348,7 +1343,6 @@ docker run -p 80:80 tellus
 2. **JWT Tokens**: Secure session management
 3. **Token Refresh**: Automatic token renewal
 4. **Session Persistence**: Secure localStorage storage
-5. **Edge Function Auth**: JWT verification on serverless functions
 
 ### Data Protection
 
@@ -1408,21 +1402,13 @@ docker run -p 80:80 tellus
 2. Check for typos in environment variables
 3. Restart development server after env changes
 
-#### Issue: "Database connection failed" or "Failed to send request to edge function"
+#### Issue: "Database connection failed"
 **Solution**:
 1. **Verify Supabase project is active** in your Supabase dashboard
 2. **Check internet connection**
-3. **Ensure edge functions are deployed**:
-   ```bash
-   supabase functions list
-   ```
-4. **Verify config.toml** has the correct project_id and function configuration
-5. **Check RLS policies** are properly set up via setup.sql
-6. **Restart development server** after any Supabase changes
-7. **For edge function errors**: Deploy the function using:
-   ```bash
-   supabase functions deploy delete-account
-   ```
+3. **Check RLS policies** are properly set up via setup.sql
+4. **Restart development server** after any Supabase changes
+5. **Verify CASCADE delete** rules in database if experiencing deletion issues
 
 #### Issue: "File upload fails"
 **Solution**:

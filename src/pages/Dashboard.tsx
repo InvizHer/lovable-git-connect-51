@@ -417,10 +417,17 @@ const Dashboard = () => {
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This will permanently delete this complaint box and all associated complaints. 
-                                    This action cannot be undone.
+                                  <AlertDialogTitle className="text-destructive">⚠️ Delete Complaint Box?</AlertDialogTitle>
+                                  <AlertDialogDescription className="space-y-2">
+                                    <p className="font-semibold text-foreground">This action cannot be undone. This will permanently delete:</p>
+                                    <ul className="list-disc list-inside space-y-1 text-sm">
+                                      <li>The complaint box: <span className="font-medium">{box.title}</span></li>
+                                      <li>All complaints submitted to this box ({box.complaint_count} complaints)</li>
+                                      <li>All feedback ratings ({box.feedback_count} feedbacks)</li>
+                                      <li>All analytics data for this box</li>
+                                      <li>All file attachments associated with complaints</li>
+                                    </ul>
+                                    <p className="text-destructive font-semibold mt-3">Are you absolutely sure you want to proceed?</p>
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
@@ -429,7 +436,7 @@ const Dashboard = () => {
                                     onClick={() => handleDeleteBox(box.id)}
                                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                   >
-                                    Delete
+                                    Yes, Delete Everything
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>

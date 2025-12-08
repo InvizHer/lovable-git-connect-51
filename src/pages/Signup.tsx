@@ -1,15 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader2, UserPlus, User, Mail, Lock } from "lucide-react";
 import FrontendHeader from "@/components/FrontendHeader";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
+import { registerAdmin, isAuthenticated } from "@/lib/auth";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -18,6 +18,13 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Redirect if already authenticated
+    if (isAuthenticated()) {
+      navigate("/dashboard");
+    }
+  }, [navigate]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,23 +47,14 @@ const Signup = () => {
     setLoading(true);
     
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username,
-          },
-          emailRedirectTo: `${window.location.origin}/dashboard`,
-        },
-      });
+      const { admin, error } = await registerAdmin(username, email, password);
 
       if (error) {
-        toast.error(error.message);
+        toast.error(error);
         return;
       }
 
-      if (data.user) {
+      if (admin) {
         toast.success("Account created successfully!");
         navigate("/dashboard");
       }

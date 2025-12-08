@@ -8,14 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Plus, ArrowLeft, Lock } from "lucide-react";
-import type { User } from "@supabase/supabase-js";
 import AdminHeader from "@/components/AdminHeader";
 import Footer from "@/components/Footer";
 import { motion } from "framer-motion";
+import { getCurrentAdmin, isAuthenticated, type Admin } from "@/lib/auth";
 
 const CreateBox = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
+  const [admin, setAdmin] = useState<Admin | null>(null);
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -24,25 +24,19 @@ const CreateBox = () => {
   const [customCategory, setCustomCategory] = useState("");
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate("/login");
-      } else {
-        setUser(session.user);
-      }
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (!session) {
-          navigate("/login");
-        } else {
-          setUser(session.user);
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
+    // Check authentication
+    if (!isAuthenticated()) {
+      navigate("/login");
+      return;
+    }
+    
+    const currentAdmin = getCurrentAdmin();
+    if (!currentAdmin) {
+      navigate("/login");
+      return;
+    }
+    
+    setAdmin(currentAdmin);
   }, [navigate]);
 
   const generateToken = () => {
@@ -68,7 +62,7 @@ const CreateBox = () => {
       return;
     }
 
-    if (!user) {
+    if (!admin) {
       toast.error("You must be logged in to create a complaint box");
       return;
     }
@@ -83,7 +77,7 @@ const CreateBox = () => {
         .from("complaint_boxes")
         .insert([
           {
-            admin_id: user.id,
+            admin_id: admin.id,
             title,
             description: description || null,
             category: finalCategory,
@@ -374,33 +368,31 @@ const CreateBox = () => {
                   >
                     <Label htmlFor="password" className="text-base flex items-center gap-2">
                       <Lock className="w-4 h-4" />
-                      Password (Optional)
+                      Password Protection (Optional)
                     </Label>
                     <Input
                       id="password"
                       type="password"
-                      placeholder="Leave empty for no password protection"
+                      placeholder="Leave empty for public access"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       disabled={loading}
                       className="text-base h-12"
                     />
-                    <p className="text-sm text-muted-foreground flex items-start gap-2 bg-secondary/50 p-3 rounded-lg">
-                      <span className="text-primary">💡</span>
-                      Users will need this password to access and submit complaints
+                    <p className="text-sm text-muted-foreground">
+                      If set, users will need to enter this password to submit complaints
                     </p>
                   </motion.div>
 
-                  <motion.div 
-                    className="flex flex-col sm:flex-row gap-3 pt-4"
+                  <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6 }}
                   >
-                    <Button 
-                      type="submit" 
-                      disabled={loading} 
-                      className="flex-1 h-12 text-base bg-gradient-to-r from-primary to-accent hover:opacity-90"
+                    <Button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full h-12 text-base bg-gradient-to-r from-primary to-accent hover:opacity-90"
                     >
                       {loading ? (
                         <>
@@ -413,15 +405,6 @@ const CreateBox = () => {
                           Create Complaint Box
                         </>
                       )}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => navigate("/dashboard")}
-                      disabled={loading}
-                      className="flex-1 h-12 text-base"
-                    >
-                      Cancel
                     </Button>
                   </motion.div>
                 </form>

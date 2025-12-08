@@ -23,24 +23,13 @@ This guide will help you set up the complete backend infrastructure for TellUs u
 1. In your Supabase project dashboard, go to **Settings** → **API**
 2. Copy the following values:
    - **Project URL** (e.g., https://xxxxx.supabase.co)
-   - **Project ID** (e.g., xxxxx)
    - **anon/public key** (starts with "eyJ...")
 
 3. Update your `.env` file in the project root:
 
 ```env
-VITE_SUPABASE_PROJECT_ID="your-project-id"
-VITE_SUPABASE_PUBLISHABLE_KEY="your-anon-key"
 VITE_SUPABASE_URL="your-project-url"
-```
-
-4. Update `supabase/config.toml` with your project ID:
-
-```toml
-project_id = "your-project-id"
-
-[functions.delete-account]
-verify_jwt = true
+VITE_SUPABASE_PUBLISHABLE_KEY="your-anon-key"
 ```
 
 ## Step 3: Run Database Setup SQL
@@ -52,27 +41,19 @@ verify_jwt = true
 5. Click "Run" or press `Ctrl/Cmd + Enter`
 
 This will create:
-- ✅ All database tables (profiles, complaint_boxes, complaints, feedbacks, analytics)
+- ✅ `admins` table (custom authentication - no Supabase Auth)
+- ✅ `complaint_boxes` table with CASCADE DELETE
+- ✅ `complaints` table with CASCADE DELETE
+- ✅ `feedbacks` table with CASCADE DELETE  
+- ✅ `analytics` table with CASCADE DELETE
+- ✅ Authentication functions (register_admin, login_admin, etc.)
+- ✅ Password hashing using bcrypt (pgcrypto)
 - ✅ Indexes for optimized queries
-- ✅ Functions and triggers for automation
+- ✅ Database triggers for analytics
 - ✅ Row Level Security (RLS) policies
 - ✅ Storage bucket for file uploads
 
-**Note**: The setup.sql file contains all necessary queries. You only need to run this file once.
-
 ## Step 4: Verify Setup
-
-The storage bucket `complaint-attachments` is automatically created when you run setup.sql.
-
-If you need to manually verify or configure:
-
-1. Go to **Storage** in Supabase dashboard
-2. Verify `complaint-attachments` bucket exists
-3. The RLS policies are already set up via setup.sql
-
-## Step 6: Verify Setup
-
-### Test Database Tables
 
 Run this query in SQL Editor to verify all tables exist:
 
@@ -84,135 +65,107 @@ ORDER BY table_name;
 ```
 
 Expected tables:
+- admins
 - analytics
 - complaint_boxes
 - complaints
 - feedbacks
-- profiles
 
-### Test Authentication
+## Authentication System
 
-1. Start your application
-2. Navigate to `/signup`
-3. Create a test account
-4. Verify you can login
+TellUs uses **custom authentication** stored directly in the `admins` table:
 
-## Security Checklist
+- **No Supabase Auth dependency** - All user data in tables
+- **No email verification required** - Instant account creation
+- **Easy data deletion** - All admin data can be cascade deleted
+- **Bcrypt password hashing** - Secure password storage
 
-✅ Row Level Security (RLS) enabled on all tables  
-✅ Authentication configured with JWT tokens  
-✅ Storage policies restrict file access appropriately  
-✅ Environment variables stored securely (not committed to git)  
-✅ CASCADE delete rules configured for data integrity
+### How It Works
 
-## Database Schema Overview
+1. **Registration**: `register_admin()` function hashes password and creates admin
+2. **Login**: `login_admin()` function verifies credentials and returns admin data
+3. **Session**: Stored in browser localStorage (7-day expiry)
+4. **Password Update**: `update_admin_password()` function
 
-### Core Tables
+## CASCADE DELETE Behavior
 
-**profiles**: User profile information
-- Links to `auth.users` (Supabase Auth)
-- Stores username and email
+When you delete data, related records are automatically removed:
 
-**complaint_boxes**: Admin-created complaint boxes
-- Each box has a unique token for access
-- Optional password protection
-- Linked to admin profile
+```
+Delete Admin Account
+  └── All Complaint Boxes deleted
+        ├── All Complaints deleted
+        ├── All Feedbacks deleted
+        └── All Analytics deleted
 
-**complaints**: Anonymous complaints submitted to boxes
-- Unique tracking token (CPL-XXXXXXXX format)
-- Status tracking (received, under_review, solved)
-- File attachment support
-- Admin reply functionality
+Delete Complaint Box
+  ├── All Complaints deleted
+  ├── All Feedbacks deleted
+  └── All Analytics deleted
+```
 
-**feedbacks**: Anonymous ratings for complaint boxes
-- 1-5 star ratings
-- Optional feedback messages
+## Security Features
 
-**analytics**: Automated analytics aggregation
-- Daily statistics per complaint box
-- Updated via database triggers
+✅ Password hashing using bcrypt (pgcrypto)
+✅ Row Level Security (RLS) enabled on all tables
+✅ Session-based authentication with expiry
+✅ Secure password verification functions
+✅ No sensitive data exposed in API responses
 
 ## Troubleshooting
 
-### Issue: Cannot see submitted data
+### Issue: Cannot register or login
 
-**Solution**: Check RLS policies. The setup.sql file includes all necessary policies, but verify they're enabled:
+**Solution**: Ensure the pgcrypto extension is enabled:
 
 ```sql
--- Check if RLS is enabled
-SELECT tablename, rowsecurity 
-FROM pg_tables 
-WHERE schemaname = 'public';
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 ```
 
-### Issue: Complaint box deletion not removing related data
+### Issue: "function does not exist" error
 
-**Solution**: Verify CASCADE delete rules are set up correctly:
+**Solution**: Re-run the entire `setup.sql` file to create all functions.
+
+### Issue: File uploads failing
+
+**Solution**:
+1. Verify storage bucket exists: Check **Storage** in dashboard
+2. Ensure file size is under 5MB
+3. Check allowed file types in bucket settings
+
+### Issue: CASCADE delete not working
+
+**Solution**: Verify foreign key constraints:
 
 ```sql
--- Check foreign key constraints
 SELECT
     tc.table_name, 
-    tc.constraint_name, 
-    kcu.column_name,
-    ccu.table_name AS foreign_table_name,
+    tc.constraint_name,
     rc.delete_rule
 FROM information_schema.table_constraints AS tc
-JOIN information_schema.key_column_usage AS kcu
-  ON tc.constraint_name = kcu.constraint_name
-JOIN information_schema.constraint_column_usage AS ccu
-  ON ccu.constraint_name = tc.constraint_name
 JOIN information_schema.referential_constraints AS rc
   ON tc.constraint_name = rc.constraint_name
 WHERE tc.constraint_type = 'FOREIGN KEY'
   AND tc.table_schema = 'public';
 ```
 
-If CASCADE rules are missing, re-run the setup.sql file.
+All `delete_rule` values should be `CASCADE`.
 
-### Issue: File uploads failing
+## Project Structure
 
-**Solution**:
-1. Verify storage bucket exists: Check **Storage** in dashboard
-2. Check storage policies in SQL Editor:
-```sql
-SELECT * FROM storage.policies WHERE bucket_id = 'complaint-attachments';
 ```
-3. Ensure file size is under 5MB
-
-### Issue: Database triggers not firing
-
-**Solution**: Verify triggers are created:
-
-```sql
-SELECT trigger_name, event_object_table, action_statement 
-FROM information_schema.triggers 
-WHERE trigger_schema = 'public';
+supabase/
+├── setup.sql              # Complete database setup script
+├── SETUP_GUIDE.md         # This guide
+├── CASCADE_DELETE_GUIDE.md # CASCADE delete documentation
+└── config.toml            # Supabase configuration
 ```
-
-## Migration from Lovable Cloud
-
-If you previously used Lovable Cloud and want to migrate to your own Supabase:
-
-1. Export data from Lovable Cloud (if needed)
-2. Follow all steps in this guide to set up your new Supabase project
-3. Update environment variables in `.env` file
-4. Import your data using SQL INSERT statements
-5. Test all functionality
-
-## Additional Resources
-
-- [Supabase Documentation](https://supabase.com/docs)
-- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
-- [Row Level Security Guide](https://supabase.com/docs/guides/auth/row-level-security)
-- [Edge Functions Guide](https://supabase.com/docs/guides/functions)
 
 ## Support
 
 For issues specific to TellUs:
 - Check the main README.md file
-- Review the troubleshooting section
-- Check Supabase dashboard logs
+- Review the troubleshooting section above
 
 For Supabase-specific issues:
 - Visit [Supabase Support](https://supabase.com/support)

@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, MessageCircle, Trash2, TrendingUp, BarChart3, Settings, Star } from "lucide-react";
+import { Plus, MessageCircle, Trash2, ExternalLink, TrendingUp, BarChart3, Settings, Star } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,11 +17,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import type { User, Session } from "@supabase/supabase-js";
 import AdminHeader from "@/components/AdminHeader";
 import Footer from "@/components/Footer";
 import { motion } from "framer-motion";
 import SEOHead from "@/components/SEOHead";
-import { getCurrentAdmin, isAuthenticated, type Admin } from "@/lib/auth";
 
 interface ComplaintBox {
   id: string;
@@ -37,41 +37,70 @@ interface ComplaintBox {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [admin, setAdmin] = useState<Admin | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [boxes, setBoxes] = useState<ComplaintBox[]>([]);
+  const [profile, setProfile] = useState<any>(null);
   const [deletingBox, setDeletingBox] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check authentication
-    if (!isAuthenticated()) {
-      navigate("/login");
-      return;
-    }
-    
-    const currentAdmin = getCurrentAdmin();
-    if (!currentAdmin) {
-      navigate("/login");
-      return;
-    }
-    
-    setAdmin(currentAdmin);
-    setLoading(false);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (!session) {
+          navigate("/login");
+        }
+      }
+    );
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (!session) {
+        navigate("/login");
+      } else {
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   useEffect(() => {
-    if (admin) {
+    if (user) {
+      fetchProfile();
       fetchBoxes();
     }
-  }, [admin]);
+  }, [user]);
+
+  const fetchProfile = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error fetching profile:", error);
+      return;
+    }
+
+    setProfile(data);
+  };
 
   const fetchBoxes = async () => {
-    if (!admin) return;
+    if (!user) return;
 
     const { data: boxesData, error: boxesError } = await supabase
       .from("complaint_boxes")
       .select("*")
-      .eq("admin_id", admin.id)
+      .eq("admin_id", user.id)
       .order("created_at", { ascending: false });
 
     if (boxesError) {
@@ -123,7 +152,7 @@ const Dashboard = () => {
 
       if (error) throw error;
 
-      toast.success("Complaint box and all related data deleted successfully");
+      toast.success("Complaint box deleted successfully");
       fetchBoxes();
     } catch (error: any) {
       toast.error(error.message || "Failed to delete complaint box");
@@ -183,7 +212,7 @@ const Dashboard = () => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <h1 className="text-3xl sm:text-3xl font-bold gradient-text mb-2">
-                  Welcome back {admin?.username || admin?.email?.split('@')[0]} 👋
+                  Welcome back {profile?.username || user?.email?.split('@')[0]} 👋
                 </h1>
                 <p className="text-md text-muted-foreground">
                   Here's your personal complaint management dashboard
@@ -390,24 +419,22 @@ const Dashboard = () => {
                                 <AlertDialogHeader>
                                   <AlertDialogTitle className="text-destructive">⚠️ Delete Complaint Box?</AlertDialogTitle>
                                   <AlertDialogDescription className="space-y-2">
-                                    <p>This action cannot be undone. This will permanently delete:</p>
+                                    <p className="font-semibold text-foreground">This action cannot be undone. This will permanently delete:</p>
                                     <ul className="list-disc list-inside space-y-1 text-sm">
-                                      <li><strong>The complaint box</strong> "{box.title}"</li>
-                                      <li><strong>{box.complaint_count} complaint(s)</strong> and all their data</li>
-                                      <li><strong>{box.feedback_count} feedback(s)</strong> and ratings</li>
-                                      <li><strong>All analytics data</strong> for this box</li>
-                                      <li><strong>All file attachments</strong> uploaded to complaints</li>
+                                      <li>The complaint box: <span className="font-medium">{box.title}</span></li>
+                                      <li>All complaints submitted to this box ({box.complaint_count} complaints)</li>
+                                      <li>All feedback ratings ({box.feedback_count} feedbacks)</li>
+                                      <li>All analytics data for this box</li>
+                                      <li>All file attachments associated with complaints</li>
                                     </ul>
-                                    <p className="font-semibold text-destructive pt-2">
-                                      Are you absolutely sure you want to delete everything?
-                                    </p>
+                                    <p className="text-destructive font-semibold mt-3">Are you absolutely sure you want to proceed?</p>
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                                   <AlertDialogAction
                                     onClick={() => handleDeleteBox(box.id)}
-                                    className="bg-destructive hover:bg-destructive/90"
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                   >
                                     Yes, Delete Everything
                                   </AlertDialogAction>

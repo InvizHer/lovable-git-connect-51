@@ -7,23 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { User, Lock, Mail, ArrowLeft, LogOut } from "lucide-react";
-import { 
-  getCurrentAdmin, 
-  isAuthenticated, 
-  logoutAdmin, 
-  updateAdminProfile, 
-  updateAdminPassword,
-  getAdminById,
-  type Admin 
-} from "@/lib/auth";
 
 const Profile = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
-  const [admin, setAdmin] = useState<Admin | null>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [username, setUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -33,52 +25,56 @@ const Profile = () => {
   }, []);
 
   const checkAuth = async () => {
-    if (!isAuthenticated()) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
       navigate("/login");
       return;
     }
-    
-    const currentAdmin = getCurrentAdmin();
-    if (!currentAdmin) {
-      navigate("/login");
-      return;
-    }
-    
-    // Fetch fresh admin data from database
-    const { admin: freshAdmin, error } = await getAdminById(currentAdmin.id);
-    if (error || !freshAdmin) {
+    fetchProfile();
+  };
+
+  const fetchProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/login");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (error) throw error;
+      
+      setProfile(data);
+      setUsername(data.username || "");
+    } catch (error: any) {
       toast.error("Failed to load profile");
-      navigate("/login");
-      return;
+    } finally {
+      setLoading(false);
     }
-    
-    setAdmin(freshAdmin);
-    setUsername(freshAdmin.username || "");
-    setLoading(false);
   };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!admin) return;
-    
     setUpdating(true);
 
     try {
-      const { success, error } = await updateAdminProfile(admin.id, username);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
 
-      if (error) {
-        toast.error(error);
-        return;
-      }
+      const { error } = await supabase
+        .from("profiles")
+        .update({ username })
+        .eq("id", user.id);
 
-      if (success) {
-        toast.success("Profile updated successfully");
-        // Refresh admin data
-        const { admin: freshAdmin } = await getAdminById(admin.id);
-        if (freshAdmin) {
-          setAdmin(freshAdmin);
-        }
-      }
+      if (error) throw error;
+
+      toast.success("Profile updated successfully");
+      fetchProfile();
     } catch (error: any) {
       toast.error(error.message || "Failed to update profile");
     } finally {
@@ -88,7 +84,6 @@ const Profile = () => {
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!admin) return;
     
     if (newPassword !== confirmPassword) {
       toast.error("Passwords do not match");
@@ -103,18 +98,15 @@ const Profile = () => {
     setUpdating(true);
 
     try {
-      const { success, error } = await updateAdminPassword(admin.id, newPassword);
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
 
-      if (error) {
-        toast.error(error);
-        return;
-      }
+      if (error) throw error;
 
-      if (success) {
-        toast.success("Password updated successfully");
-        setNewPassword("");
-        setConfirmPassword("");
-      }
+      toast.success("Password updated successfully");
+      setNewPassword("");
+      setConfirmPassword("");
     } catch (error: any) {
       toast.error(error.message || "Failed to update password");
     } finally {
@@ -122,8 +114,12 @@ const Profile = () => {
     }
   };
 
-  const handleLogout = () => {
-    logoutAdmin();
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error("Failed to logout");
+      return;
+    }
     toast.success("Logged out successfully");
     navigate("/login");
   };
@@ -195,7 +191,7 @@ const Profile = () => {
                     <Input
                       id="email"
                       type="email"
-                      value={admin?.email || ""}
+                      value={profile?.email || ""}
                       disabled
                       className="bg-secondary/50"
                     />

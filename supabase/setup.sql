@@ -5,40 +5,25 @@
 -- This script sets up the entire database schema for TellUs
 -- Run this in your Supabase SQL Editor to set up the database
 -- =====================================================
--- 
--- IMPORTANT: This uses custom authentication stored in tables
--- No Supabase Auth (auth.users) is used - all user data is in tables
--- This makes account deletion and data management simpler
--- =====================================================
-
--- =====================================================
--- 0. ENABLE REQUIRED EXTENSIONS
--- =====================================================
-
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- =====================================================
 -- 1. CREATE TABLES
 -- =====================================================
 
--- Admins Table (Custom Authentication)
--- Stores admin credentials directly in database
--- No reliance on Supabase Auth - all data deletable
-CREATE TABLE IF NOT EXISTS public.admins (
-  id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+-- Profiles Table
+-- Stores additional user information linked to auth.users
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID NOT NULL PRIMARY KEY,
   username TEXT NOT NULL,
-  email TEXT NOT NULL UNIQUE,
-  password_hash TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+  email TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
 -- Complaint Boxes Table
 -- Stores complaint boxes created by admins
--- CASCADE DELETE: When admin is deleted, all their boxes are deleted
 CREATE TABLE IF NOT EXISTS public.complaint_boxes (
   id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
-  admin_id UUID NOT NULL REFERENCES public.admins(id) ON DELETE CASCADE,
+  admin_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   description TEXT,
   category TEXT NOT NULL,
@@ -50,7 +35,6 @@ CREATE TABLE IF NOT EXISTS public.complaint_boxes (
 
 -- Complaints Table
 -- Stores complaints submitted anonymously by users
--- CASCADE DELETE: When complaint box is deleted, all complaints are deleted
 CREATE TABLE IF NOT EXISTS public.complaints (
   id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
   box_id UUID NOT NULL REFERENCES public.complaint_boxes(id) ON DELETE CASCADE,
@@ -70,7 +54,6 @@ CREATE TABLE IF NOT EXISTS public.complaints (
 
 -- Feedbacks Table
 -- Stores anonymous feedback ratings for complaint boxes
--- CASCADE DELETE: When complaint box is deleted, all feedbacks are deleted
 CREATE TABLE IF NOT EXISTS public.feedbacks (
   id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
   box_id UUID NOT NULL REFERENCES public.complaint_boxes(id) ON DELETE CASCADE,
@@ -81,7 +64,6 @@ CREATE TABLE IF NOT EXISTS public.feedbacks (
 
 -- Analytics Table
 -- Stores daily analytics data aggregated for complaint boxes
--- CASCADE DELETE: When complaint box is deleted, all analytics are deleted
 CREATE TABLE IF NOT EXISTS public.analytics (
   id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
   box_id UUID NOT NULL REFERENCES public.complaint_boxes(id) ON DELETE CASCADE,
@@ -102,7 +84,6 @@ CREATE TABLE IF NOT EXISTS public.analytics (
 -- 2. CREATE INDEXES FOR PERFORMANCE
 -- =====================================================
 
-CREATE INDEX IF NOT EXISTS idx_admins_email ON public.admins(email);
 CREATE INDEX IF NOT EXISTS idx_complaint_boxes_admin_id ON public.complaint_boxes(admin_id);
 CREATE INDEX IF NOT EXISTS idx_complaint_boxes_token ON public.complaint_boxes(token);
 CREATE INDEX IF NOT EXISTS idx_complaints_box_id ON public.complaints(box_id);
@@ -130,112 +111,21 @@ BEGIN
 END;
 $$;
 
--- Function to hash password using bcrypt
-CREATE OR REPLACE FUNCTION public.hash_password(password TEXT)
-RETURNS TEXT
+-- Function to handle new user creation and create profile
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  RETURN crypt(password, gen_salt('bf', 10));
-END;
-$$;
-
--- Function to verify password
-CREATE OR REPLACE FUNCTION public.verify_password(password TEXT, password_hash TEXT)
-RETURNS BOOLEAN
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  RETURN password_hash = crypt(password, password_hash);
-END;
-$$;
-
--- Function to register a new admin
-CREATE OR REPLACE FUNCTION public.register_admin(
-  p_username TEXT,
-  p_email TEXT,
-  p_password TEXT
-)
-RETURNS TABLE(
-  id UUID,
-  username TEXT,
-  email TEXT,
-  created_at TIMESTAMP WITH TIME ZONE
-)
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  v_admin_id UUID;
-BEGIN
-  -- Check if email already exists
-  IF EXISTS (SELECT 1 FROM public.admins WHERE admins.email = p_email) THEN
-    RAISE EXCEPTION 'Email already registered';
-  END IF;
-  
-  -- Insert new admin with hashed password
-  INSERT INTO public.admins (username, email, password_hash)
-  VALUES (p_username, p_email, public.hash_password(p_password))
-  RETURNING admins.id INTO v_admin_id;
-  
-  -- Return the created admin
-  RETURN QUERY
-  SELECT a.id, a.username, a.email, a.created_at
-  FROM public.admins a
-  WHERE a.id = v_admin_id;
-END;
-$$;
-
--- Function to login admin
-CREATE OR REPLACE FUNCTION public.login_admin(
-  p_email TEXT,
-  p_password TEXT
-)
-RETURNS TABLE(
-  id UUID,
-  username TEXT,
-  email TEXT,
-  created_at TIMESTAMP WITH TIME ZONE
-)
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  RETURN QUERY
-  SELECT a.id, a.username, a.email, a.created_at
-  FROM public.admins a
-  WHERE a.email = p_email
-  AND public.verify_password(p_password, a.password_hash);
-  
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'Invalid email or password';
-  END IF;
-END;
-$$;
-
--- Function to update admin password
-CREATE OR REPLACE FUNCTION public.update_admin_password(
-  p_admin_id UUID,
-  p_new_password TEXT
-)
-RETURNS BOOLEAN
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  UPDATE public.admins
-  SET password_hash = public.hash_password(p_new_password),
-      updated_at = now()
-  WHERE id = p_admin_id;
-  
-  RETURN FOUND;
+  INSERT INTO public.profiles (id, username, email)
+  VALUES (
+    new.id,
+    new.raw_user_meta_data->>'username',
+    new.email
+  );
+  RETURN new;
 END;
 $$;
 
@@ -315,13 +205,14 @@ $$;
 -- 4. CREATE TRIGGERS
 -- =====================================================
 
--- Triggers for updating updated_at column
-DROP TRIGGER IF EXISTS update_admins_updated_at ON public.admins;
-CREATE TRIGGER update_admins_updated_at
-  BEFORE UPDATE ON public.admins
+-- Trigger for auto-creating user profile on signup
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
   FOR EACH ROW
-  EXECUTE FUNCTION public.update_updated_at_column();
+  EXECUTE FUNCTION public.handle_new_user();
 
+-- Triggers for updating updated_at column
 DROP TRIGGER IF EXISTS update_complaint_boxes_updated_at ON public.complaint_boxes;
 CREATE TRIGGER update_complaint_boxes_updated_at
   BEFORE UPDATE ON public.complaint_boxes
@@ -357,89 +248,112 @@ CREATE TRIGGER update_analytics_on_feedback_change
 -- 5. ENABLE ROW LEVEL SECURITY (RLS)
 -- =====================================================
 
-ALTER TABLE public.admins ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.complaint_boxes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.complaints ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.feedbacks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.analytics ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================
--- 6. CREATE RLS POLICIES FOR ADMINS
+-- 6. CREATE RLS POLICIES FOR PROFILES
 -- =====================================================
 
--- Admins: Allow public read for login verification (password hash is hidden via function)
-DROP POLICY IF EXISTS "Allow public to read admins for auth" ON public.admins;
-CREATE POLICY "Allow public to read admins for auth"
-  ON public.admins
+-- Profiles: Users can view their own profile
+DROP POLICY IF EXISTS "Users can view their own profile" ON public.profiles;
+CREATE POLICY "Users can view their own profile"
+  ON public.profiles
   FOR SELECT
-  TO anon, authenticated
-  USING (true);
+  TO authenticated
+  USING (auth.uid() = id);
 
--- Admins: Allow public to insert (for registration via function)
-DROP POLICY IF EXISTS "Allow public to insert admins" ON public.admins;
-CREATE POLICY "Allow public to insert admins"
-  ON public.admins
+-- Profiles: Users can insert their own profile
+DROP POLICY IF EXISTS "Users can insert their own profile" ON public.profiles;
+CREATE POLICY "Users can insert their own profile"
+  ON public.profiles
   FOR INSERT
-  TO anon, authenticated
-  WITH CHECK (true);
+  TO authenticated
+  WITH CHECK (auth.uid() = id);
 
--- Admins: Allow admins to update their own profile
-DROP POLICY IF EXISTS "Allow admins to update own profile" ON public.admins;
-CREATE POLICY "Allow admins to update own profile"
-  ON public.admins
+-- Profiles: Users can update their own profile
+DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
+CREATE POLICY "Users can update their own profile"
+  ON public.profiles
   FOR UPDATE
-  TO anon, authenticated
-  USING (true);
+  TO authenticated
+  USING (auth.uid() = id);
 
 -- =====================================================
 -- 7. CREATE RLS POLICIES FOR COMPLAINT BOXES
 -- =====================================================
 
--- Complaint Boxes: Anyone can view (for public submission page)
-DROP POLICY IF EXISTS "Anyone can view complaint boxes" ON public.complaint_boxes;
-CREATE POLICY "Anyone can view complaint boxes"
+-- Complaint Boxes: Admins can view their own boxes
+DROP POLICY IF EXISTS "Admins can view their own complaint boxes" ON public.complaint_boxes;
+CREATE POLICY "Admins can view their own complaint boxes"
+  ON public.complaint_boxes
+  FOR SELECT
+  TO authenticated
+  USING (auth.uid() = admin_id);
+
+-- Complaint Boxes: Anyone can view by token (for submission page)
+DROP POLICY IF EXISTS "Anyone can view complaint boxes by token" ON public.complaint_boxes;
+CREATE POLICY "Anyone can view complaint boxes by token"
   ON public.complaint_boxes
   FOR SELECT
   TO anon, authenticated
   USING (true);
 
--- Complaint Boxes: Anyone can insert (authenticated via application layer)
-DROP POLICY IF EXISTS "Anyone can insert complaint boxes" ON public.complaint_boxes;
-CREATE POLICY "Anyone can insert complaint boxes"
+-- Complaint Boxes: Admins can insert their own boxes
+DROP POLICY IF EXISTS "Admins can insert their own complaint boxes" ON public.complaint_boxes;
+CREATE POLICY "Admins can insert their own complaint boxes"
   ON public.complaint_boxes
   FOR INSERT
-  TO anon, authenticated
-  WITH CHECK (true);
+  TO authenticated
+  WITH CHECK (auth.uid() = admin_id);
 
--- Complaint Boxes: Anyone can update (authenticated via application layer)
-DROP POLICY IF EXISTS "Anyone can update complaint boxes" ON public.complaint_boxes;
-CREATE POLICY "Anyone can update complaint boxes"
+-- Complaint Boxes: Admins can update their own boxes
+DROP POLICY IF EXISTS "Admins can update their own complaint boxes" ON public.complaint_boxes;
+CREATE POLICY "Admins can update their own complaint boxes"
   ON public.complaint_boxes
   FOR UPDATE
-  TO anon, authenticated
-  USING (true);
+  TO authenticated
+  USING (auth.uid() = admin_id);
 
--- Complaint Boxes: Anyone can delete (authenticated via application layer)
-DROP POLICY IF EXISTS "Anyone can delete complaint boxes" ON public.complaint_boxes;
-CREATE POLICY "Anyone can delete complaint boxes"
+-- Complaint Boxes: Admins can delete their own boxes
+DROP POLICY IF EXISTS "Admins can delete their own complaint boxes" ON public.complaint_boxes;
+CREATE POLICY "Admins can delete their own complaint boxes"
   ON public.complaint_boxes
   FOR DELETE
-  TO anon, authenticated
-  USING (true);
+  TO authenticated
+  USING (auth.uid() = admin_id);
 
 -- =====================================================
 -- 8. CREATE RLS POLICIES FOR COMPLAINTS
 -- =====================================================
 
--- Complaints: Anyone can view
-DROP POLICY IF EXISTS "Anyone can view complaints" ON public.complaints;
-CREATE POLICY "Anyone can view complaints"
+-- Complaints: Admins can view complaints in their boxes
+DROP POLICY IF EXISTS "Admins can view complaints in their boxes" ON public.complaints;
+CREATE POLICY "Admins can view complaints in their boxes"
+  ON public.complaints
+  FOR SELECT
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM complaint_boxes
+      WHERE complaint_boxes.id = complaints.box_id
+      AND complaint_boxes.admin_id = auth.uid()
+    )
+  );
+
+-- Complaints: Anyone can view complaints by token (for tracking)
+DROP POLICY IF EXISTS "Anyone can view complaints by token" ON public.complaints;
+CREATE POLICY "Anyone can view complaints by token"
   ON public.complaints
   FOR SELECT
   TO anon, authenticated
   USING (true);
 
--- Complaints: Anyone can insert (anonymous submission)
+-- Complaints: Anyone can insert complaints (anonymous submission)
 DROP POLICY IF EXISTS "Anyone can insert complaints" ON public.complaints;
 CREATE POLICY "Anyone can insert complaints"
   ON public.complaints
@@ -447,27 +361,41 @@ CREATE POLICY "Anyone can insert complaints"
   TO anon, authenticated
   WITH CHECK (true);
 
--- Complaints: Anyone can update (authenticated via application layer)
-DROP POLICY IF EXISTS "Anyone can update complaints" ON public.complaints;
-CREATE POLICY "Anyone can update complaints"
+-- Complaints: Admins can update complaints in their boxes
+DROP POLICY IF EXISTS "Admins can update complaints in their boxes" ON public.complaints;
+CREATE POLICY "Admins can update complaints in their boxes"
   ON public.complaints
   FOR UPDATE
-  TO anon, authenticated
-  USING (true);
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM complaint_boxes
+      WHERE complaint_boxes.id = complaints.box_id
+      AND complaint_boxes.admin_id = auth.uid()
+    )
+  );
 
--- Complaints: Anyone can delete (authenticated via application layer)
-DROP POLICY IF EXISTS "Anyone can delete complaints" ON public.complaints;
-CREATE POLICY "Anyone can delete complaints"
+-- Complaints: Admins can delete complaints in their boxes
+DROP POLICY IF EXISTS "Admins can delete complaints in their boxes" ON public.complaints;
+CREATE POLICY "Admins can delete complaints in their boxes"
   ON public.complaints
   FOR DELETE
-  TO anon, authenticated
-  USING (true);
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM complaint_boxes
+      WHERE complaint_boxes.id = complaints.box_id
+      AND complaint_boxes.admin_id = auth.uid()
+    )
+  );
 
 -- =====================================================
 -- 9. CREATE RLS POLICIES FOR FEEDBACKS
 -- =====================================================
 
--- Feedbacks: Anyone can view
+-- Anyone can view feedbacks
 DROP POLICY IF EXISTS "Anyone can view feedbacks" ON public.feedbacks;
 CREATE POLICY "Anyone can view feedbacks"
   ON public.feedbacks
@@ -475,7 +403,7 @@ CREATE POLICY "Anyone can view feedbacks"
   TO anon, authenticated
   USING (true);
 
--- Feedbacks: Anyone can insert (anonymous feedback)
+-- Anyone can insert feedbacks (anonymous feedback)
 DROP POLICY IF EXISTS "Anyone can insert feedbacks" ON public.feedbacks;
 CREATE POLICY "Anyone can insert feedbacks"
   ON public.feedbacks
@@ -483,33 +411,54 @@ CREATE POLICY "Anyone can insert feedbacks"
   TO anon, authenticated
   WITH CHECK (true);
 
--- Feedbacks: Anyone can delete (authenticated via application layer)
-DROP POLICY IF EXISTS "Anyone can delete feedbacks" ON public.feedbacks;
-CREATE POLICY "Anyone can delete feedbacks"
+-- Admins can delete feedbacks in their boxes
+DROP POLICY IF EXISTS "Admins can delete feedbacks in their boxes" ON public.feedbacks;
+CREATE POLICY "Admins can delete feedbacks in their boxes"
   ON public.feedbacks
   FOR DELETE
-  TO anon, authenticated
-  USING (true);
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM complaint_boxes
+      WHERE complaint_boxes.id = feedbacks.box_id
+      AND complaint_boxes.admin_id = auth.uid()
+    )
+  );
 
 -- =====================================================
 -- 10. CREATE RLS POLICIES FOR ANALYTICS
 -- =====================================================
 
--- Analytics: Anyone can view
-DROP POLICY IF EXISTS "Anyone can view analytics" ON public.analytics;
-CREATE POLICY "Anyone can view analytics"
+-- Admins can view analytics for their boxes
+DROP POLICY IF EXISTS "Admins can view analytics for their boxes" ON public.analytics;
+CREATE POLICY "Admins can view analytics for their boxes"
   ON public.analytics
   FOR SELECT
-  TO anon, authenticated
-  USING (true);
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM complaint_boxes
+      WHERE complaint_boxes.id = analytics.box_id
+      AND complaint_boxes.admin_id = auth.uid()
+    )
+  );
 
--- Analytics: Anyone can manage (system managed via triggers)
-DROP POLICY IF EXISTS "Anyone can manage analytics" ON public.analytics;
-CREATE POLICY "Anyone can manage analytics"
+-- Admins can manage analytics for their boxes
+DROP POLICY IF EXISTS "Admins can manage analytics for their boxes" ON public.analytics;
+CREATE POLICY "Admins can manage analytics for their boxes"
   ON public.analytics
   FOR ALL
-  TO anon, authenticated
-  USING (true);
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM complaint_boxes
+      WHERE complaint_boxes.id = analytics.box_id
+      AND complaint_boxes.admin_id = auth.uid()
+    )
+  );
 
 -- =====================================================
 -- 11. CREATE STORAGE BUCKET
@@ -558,53 +507,42 @@ CREATE POLICY "Anyone can view complaint attachments"
   TO anon, authenticated
   USING (bucket_id = 'complaint-attachments');
 
--- Storage: Anyone can delete complaint attachments
-DROP POLICY IF EXISTS "Anyone can delete complaint attachments" ON storage.objects;
-CREATE POLICY "Anyone can delete complaint attachments"
+-- Storage: Admins can delete attachments from complaints in their boxes
+DROP POLICY IF EXISTS "Admins can delete complaint attachments" ON storage.objects;
+CREATE POLICY "Admins can delete complaint attachments"
   ON storage.objects
   FOR DELETE
-  TO anon, authenticated
-  USING (bucket_id = 'complaint-attachments');
+  TO authenticated
+  USING (
+    bucket_id = 'complaint-attachments'
+    AND EXISTS (
+      SELECT 1
+      FROM complaints c
+      JOIN complaint_boxes cb ON c.box_id = cb.id
+      WHERE cb.admin_id = auth.uid()
+      AND c.attachment_url LIKE '%' || storage.objects.name || '%'
+    )
+  );
 
 -- =====================================================
 -- SETUP COMPLETE
 -- =====================================================
 -- Your TellUs database is now ready to use!
 -- 
--- Key Features:
--- ✅ Custom authentication (no Supabase Auth dependency)
--- ✅ All user data stored in tables (easy to delete)
--- ✅ CASCADE DELETE on all foreign keys
--- ✅ Password hashing using bcrypt (pgcrypto)
--- ✅ Secure login/register functions
--- ✅ Automatic analytics updates via triggers
+-- Next steps:
+-- 1. Configure authentication settings in Supabase Dashboard:
+--    - Go to Authentication > Providers
+--    - Enable Email provider
+--    - Enable "Confirm email" or disable it for testing
 -- 
--- Tables Created:
--- - admins: Admin user accounts with credentials
--- - complaint_boxes: Complaint boxes with CASCADE DELETE
--- - complaints: Anonymous complaints with CASCADE DELETE
--- - feedbacks: Anonymous ratings with CASCADE DELETE
--- - analytics: Auto-generated daily statistics
--- 
--- Functions Created:
--- - register_admin(): Create new admin account
--- - login_admin(): Verify admin credentials
--- - update_admin_password(): Change admin password
--- - hash_password(): Hash passwords with bcrypt
--- - verify_password(): Verify password against hash
--- 
--- CASCADE DELETE Behavior:
--- - Delete Admin → All their complaint boxes deleted
--- - Delete Complaint Box → All complaints, feedbacks, analytics deleted
--- 
--- Next Steps:
--- 1. Get your API credentials from Settings > API:
+-- 2. Get your API credentials from Settings > API:
 --    - Project URL
 --    - anon/public key
+--    - service_role key (keep this secret!)
 -- 
--- 2. Add credentials to your .env file:
+-- 3. Add credentials to your .env file:
 --    VITE_SUPABASE_URL=your-project-url
 --    VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key
 -- 
--- 3. Start building your application!
+-- 4. Start building your application!
 -- =====================================================

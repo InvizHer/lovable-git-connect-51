@@ -40,6 +40,49 @@ const Signup = () => {
     setLoading(true);
     
     try {
+      // Check if user already exists in auth (might have orphaned auth record)
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInData?.user) {
+        // User exists in auth, check if they have a profile
+        const { data: existingProfile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", signInData.user.id)
+          .maybeSingle();
+
+        if (existingProfile) {
+          // User already has an account with profile
+          toast.success("Account already exists! Logging you in...");
+          navigate("/dashboard");
+          return;
+        } else {
+          // User in auth but no profile - create profile
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .insert({
+              id: signInData.user.id,
+              username,
+              email,
+            });
+
+          if (profileError) {
+            console.error("Profile creation error:", profileError);
+            toast.error("Failed to create profile. Please try again.");
+            await supabase.auth.signOut();
+            return;
+          }
+
+          toast.success("Account restored successfully!");
+          navigate("/dashboard");
+          return;
+        }
+      }
+
+      // No existing auth record, create new account
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -52,11 +95,39 @@ const Signup = () => {
       });
 
       if (error) {
+        // Handle specific error cases
+        if (error.message.includes("already registered")) {
+          toast.error("This email is already registered. Please login instead.");
+          navigate("/login");
+          return;
+        }
         toast.error(error.message);
         return;
       }
 
       if (data.user) {
+        // Verify profile was created by trigger
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", data.user.id)
+          .maybeSingle();
+
+        if (!profile) {
+          // Profile wasn't created by trigger, create manually
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .insert({
+              id: data.user.id,
+              username,
+              email,
+            });
+
+          if (profileError) {
+            console.error("Manual profile creation error:", profileError);
+          }
+        }
+
         toast.success("Account created successfully!");
         navigate("/dashboard");
       }

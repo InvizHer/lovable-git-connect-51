@@ -653,13 +653,9 @@ tellus/
 │
 ├── supabase/                  # Supabase backend configuration
 │   ├── SETUP_GUIDE.md         # Complete database setup documentation
-│   ├── EDGE_FUNCTIONS_GUIDE.md # Edge functions deployment guide
-│   ├── config.toml            # Supabase project & edge function config
+│   ├── config.toml            # Supabase project configuration
 │   ├── setup.sql              # Single comprehensive database setup file
-│   ├── migrations/            # Database migrations (auto-generated)
-│   └── functions/             # Edge functions
-│       └── delete-account/    # Secure account deletion function
-│           └── index.ts
+│   └── migrations/            # Database migrations (auto-generated)
 │
 ├── .env                       # Environment variables (not in git)
 ├── .gitignore                 # Git ignore rules
@@ -704,7 +700,6 @@ Custom React hooks for reusable logic:
 #### `/supabase/`
 Backend configuration and scripts:
 - **`SETUP_GUIDE.md`**: Complete step-by-step setup instructions
-- **`EDGE_FUNCTIONS_GUIDE.md`**: Edge functions guide and template (for custom functions)
 - **`setup.sql`**: Single comprehensive database setup file (run this once)
 - **`config.toml`**: Supabase project configuration
 - **`migrations/`**: Auto-generated migration files (don't edit manually)
@@ -1546,7 +1541,6 @@ SOFTWARE.
 - **Total Lines of Code**: ~15,000+
 - **Components**: 50+ React components
 - **Database Tables**: 5 tables
-- **Edge Functions**: 1 function
 - **Deployment Options**: 5+ platforms
 - **Contributors**: Open for contributions
 - **License**: MIT (Open Source)

@@ -28,6 +28,7 @@ const Login = () => {
     setLoading(true);
     
     try {
+      // First, sign in with Supabase Auth
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -39,6 +40,31 @@ const Login = () => {
       }
 
       if (data.user) {
+        // Verify user has a profile in the database
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", data.user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error("Profile check error:", profileError);
+          // Sign out since profile check failed
+          await supabase.auth.signOut();
+          toast.error("Failed to verify account. Please try again.");
+          return;
+        }
+
+        if (!profile) {
+          // User exists in auth but not in profiles table
+          // Sign them out and prompt to create account
+          await supabase.auth.signOut();
+          toast.error("Account not found in database. Please create a new account.");
+          navigate("/signup");
+          return;
+        }
+
+        // Profile exists, login successful
         toast.success("Login successful!");
         navigate("/dashboard");
       }

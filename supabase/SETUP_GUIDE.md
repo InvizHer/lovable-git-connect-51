@@ -1,219 +1,162 @@
 # TellUs - Supabase Setup Guide
 
-This guide will help you set up the complete backend infrastructure for TellUs using Supabase.
+Complete database setup guide for TellUs Anonymous Complaint Management System.
 
 ## Prerequisites
 
-- A Supabase account (sign up at https://supabase.com)
-- Basic understanding of SQL and PostgreSQL
+- Supabase account (https://supabase.com)
+- Your project's `.env` file ready for configuration
 
-## Step 1: Create a New Supabase Project
+## Quick Setup (5 Minutes)
+
+### Step 1: Create Supabase Project
 
 1. Go to https://supabase.com/dashboard
 2. Click "New Project"
-3. Fill in the project details:
-   - **Name**: TellUs (or your preferred name)
-   - **Database Password**: Choose a strong password (save it securely)
-   - **Region**: Choose the closest region to your users
-4. Click "Create new project"
-5. Wait for the project to be provisioned (2-3 minutes)
+3. Fill in project details and click "Create"
+4. Wait 2-3 minutes for provisioning
 
-## Step 2: Configure Environment Variables
+### Step 2: Run Database Setup
 
-1. In your Supabase project dashboard, go to **Settings** → **API**
-2. Copy the following values:
-   - **Project URL** (e.g., https://xxxxx.supabase.co)
-   - **Project ID** (e.g., xxxxx)
-   - **anon/public key** (starts with "eyJ...")
+1. In Supabase dashboard, go to **SQL Editor**
+2. Click "New query"
+3. Copy **entire contents** of `supabase/setup.sql`
+4. Paste and click "Run"
 
-3. Update your `.env` file in the project root:
+This creates:
+- ✅ All tables with CASCADE DELETE relationships
+- ✅ Indexes for performance
+- ✅ Functions and triggers
+- ✅ Row Level Security policies
+- ✅ Storage bucket for attachments
+
+### Step 3: Configure Environment
+
+1. Go to **Settings → API** in Supabase
+2. Copy Project URL and anon key
+3. Update `.env`:
 
 ```env
-VITE_SUPABASE_PROJECT_ID="your-project-id"
-VITE_SUPABASE_PUBLISHABLE_KEY="your-anon-key"
 VITE_SUPABASE_URL="your-project-url"
+VITE_SUPABASE_PUBLISHABLE_KEY="your-anon-key"
 ```
 
-4. Update `supabase/config.toml` with your project ID:
+### Step 4: Configure Authentication
 
-```toml
-project_id = "your-project-id"
+1. Go to **Authentication → Providers**
+2. Ensure Email provider is enabled
+3. **Recommended**: Disable "Confirm email" for easier testing
 
-[functions.delete-account]
-verify_jwt = true
-```
+### Step 5: Configure Redirect URLs
 
-## Step 3: Run Database Setup SQL
+1. Go to **Authentication → URL Configuration**
+2. Set Site URL to your app URL (e.g., `https://your-app.netlify.app`)
+3. Add Redirect URLs:
+   - Your production URL
+   - `http://localhost:5173` (for local development)
 
-1. In your Supabase dashboard, go to **SQL Editor**
-2. Click "New query"
-3. Copy the entire contents of `supabase/setup.sql` file
-4. Paste it into the SQL editor
-5. Click "Run" or press `Ctrl/Cmd + Enter`
+## Database Schema
 
-This will create:
-- ✅ All database tables (profiles, complaint_boxes, complaints, feedbacks, analytics)
-- ✅ Indexes for optimized queries
-- ✅ Functions and triggers for automation
-- ✅ Row Level Security (RLS) policies
-- ✅ Storage bucket for file uploads
+### Tables
 
-**Note**: The setup.sql file contains all necessary queries. You only need to run this file once.
+| Table | Description | CASCADE Behavior |
+|-------|-------------|------------------|
+| `profiles` | User profiles linked to auth.users | Deleted when auth user deleted |
+| `complaint_boxes` | Admin-created complaint boxes | Deletes all child records |
+| `complaints` | Anonymous complaints | Auto-deleted with parent box |
+| `feedbacks` | Anonymous ratings | Auto-deleted with parent box |
+| `analytics` | Daily statistics | Auto-deleted with parent box |
 
-## Step 4: Verify Setup
+### CASCADE Delete Behavior
 
-The storage bucket `complaint-attachments` is automatically created when you run setup.sql.
+When a **complaint box** is deleted:
+- All complaints are automatically deleted
+- All feedbacks are automatically deleted
+- All analytics data is automatically deleted
 
-If you need to manually verify or configure:
+When an **auth user** is deleted:
+- Their profile is automatically deleted
+- All their complaint boxes are deleted (which cascades to complaints, feedbacks, analytics)
 
-1. Go to **Storage** in Supabase dashboard
-2. Verify `complaint-attachments` bucket exists
-3. The RLS policies are already set up via setup.sql
+## Authentication Flow
 
-## Step 6: Verify Setup
+### Login Process
+1. User enters email/password
+2. Supabase Auth validates credentials
+3. App verifies user has a profile in database
+4. If no profile exists, user is redirected to signup
 
-### Test Database Tables
+### Signup Process
+1. User creates account via Supabase Auth
+2. Database trigger automatically creates profile
+3. If trigger fails, app creates profile manually
+4. User is logged in and redirected to dashboard
 
-Run this query in SQL Editor to verify all tables exist:
+## Verification Queries
 
+Run these in SQL Editor to verify setup:
+
+### Check Tables Exist
 ```sql
-SELECT table_name 
-FROM information_schema.tables 
-WHERE table_schema = 'public' 
-ORDER BY table_name;
+SELECT table_name FROM information_schema.tables 
+WHERE table_schema = 'public' ORDER BY table_name;
 ```
 
-Expected tables:
-- analytics
-- complaint_boxes
-- complaints
-- feedbacks
-- profiles
+Expected: `analytics`, `complaint_boxes`, `complaints`, `feedbacks`, `profiles`
 
-### Test Authentication
-
-1. Start your application
-2. Navigate to `/signup`
-3. Create a test account
-4. Verify you can login
-
-## Security Checklist
-
-✅ Row Level Security (RLS) enabled on all tables  
-✅ Authentication configured with JWT tokens  
-✅ Storage policies restrict file access appropriately  
-✅ Environment variables stored securely (not committed to git)  
-✅ CASCADE delete rules configured for data integrity
-
-## Database Schema Overview
-
-### Core Tables
-
-**profiles**: User profile information
-- Links to `auth.users` (Supabase Auth)
-- Stores username and email
-
-**complaint_boxes**: Admin-created complaint boxes
-- Each box has a unique token for access
-- Optional password protection
-- Linked to admin profile
-
-**complaints**: Anonymous complaints submitted to boxes
-- Unique tracking token (CPL-XXXXXXXX format)
-- Status tracking (received, under_review, solved)
-- File attachment support
-- Admin reply functionality
-
-**feedbacks**: Anonymous ratings for complaint boxes
-- 1-5 star ratings
-- Optional feedback messages
-
-**analytics**: Automated analytics aggregation
-- Daily statistics per complaint box
-- Updated via database triggers
-
-## Troubleshooting
-
-### Issue: Cannot see submitted data
-
-**Solution**: Check RLS policies. The setup.sql file includes all necessary policies, but verify they're enabled:
-
+### Check CASCADE Constraints
 ```sql
--- Check if RLS is enabled
-SELECT tablename, rowsecurity 
-FROM pg_tables 
-WHERE schemaname = 'public';
-```
-
-### Issue: Complaint box deletion not removing related data
-
-**Solution**: Verify CASCADE delete rules are set up correctly:
-
-```sql
--- Check foreign key constraints
-SELECT
-    tc.table_name, 
-    tc.constraint_name, 
-    kcu.column_name,
-    ccu.table_name AS foreign_table_name,
-    rc.delete_rule
-FROM information_schema.table_constraints AS tc
-JOIN information_schema.key_column_usage AS kcu
+SELECT tc.table_name, kcu.column_name, 
+       ccu.table_name AS foreign_table, rc.delete_rule
+FROM information_schema.table_constraints tc
+JOIN information_schema.key_column_usage kcu 
   ON tc.constraint_name = kcu.constraint_name
-JOIN information_schema.constraint_column_usage AS ccu
+JOIN information_schema.constraint_column_usage ccu 
   ON ccu.constraint_name = tc.constraint_name
-JOIN information_schema.referential_constraints AS rc
+JOIN information_schema.referential_constraints rc 
   ON tc.constraint_name = rc.constraint_name
-WHERE tc.constraint_type = 'FOREIGN KEY'
+WHERE tc.constraint_type = 'FOREIGN KEY' 
   AND tc.table_schema = 'public';
 ```
 
-If CASCADE rules are missing, re-run the setup.sql file.
+All should show `delete_rule = 'CASCADE'`
 
-### Issue: File uploads failing
-
-**Solution**:
-1. Verify storage bucket exists: Check **Storage** in dashboard
-2. Check storage policies in SQL Editor:
+### Check RLS Enabled
 ```sql
-SELECT * FROM storage.policies WHERE bucket_id = 'complaint-attachments';
-```
-3. Ensure file size is under 5MB
-
-### Issue: Database triggers not firing
-
-**Solution**: Verify triggers are created:
-
-```sql
-SELECT trigger_name, event_object_table, action_statement 
-FROM information_schema.triggers 
-WHERE trigger_schema = 'public';
+SELECT tablename, rowsecurity FROM pg_tables 
+WHERE schemaname = 'public';
 ```
 
-## Migration from Lovable Cloud
+All should show `rowsecurity = true`
 
-If you previously used Lovable Cloud and want to migrate to your own Supabase:
+## Troubleshooting
 
-1. Export data from Lovable Cloud (if needed)
-2. Follow all steps in this guide to set up your new Supabase project
-3. Update environment variables in `.env` file
-4. Import your data using SQL INSERT statements
-5. Test all functionality
+### "User not found in database"
+- User exists in auth.users but not in profiles
+- Solution: User should create new account via signup
 
-## Additional Resources
+### Complaint box deletion not cascading
+- Run the complete `setup.sql` again
+- Verify CASCADE constraints with query above
 
-- [Supabase Documentation](https://supabase.com/docs)
-- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
-- [Row Level Security Guide](https://supabase.com/docs/guides/auth/row-level-security)
-- [Edge Functions Guide](https://supabase.com/docs/guides/functions)
+### Login redirects to signup
+- Profile doesn't exist for this auth user
+- Normal behavior - user needs to complete signup
+
+### File uploads failing
+- Verify storage bucket exists in **Storage** dashboard
+- Check file size is under 5MB
+- Verify file type is allowed
+
+## Security Notes
+
+- All tables have Row Level Security enabled
+- Users can only access their own data
+- Anonymous submission is allowed for complaints/feedbacks
+- Storage policies restrict access appropriately
 
 ## Support
 
-For issues specific to TellUs:
-- Check the main README.md file
-- Review the troubleshooting section
-- Check Supabase dashboard logs
-
-For Supabase-specific issues:
-- Visit [Supabase Support](https://supabase.com/support)
-- Check [Supabase Discord](https://discord.supabase.com)
+- Check Supabase logs in dashboard for errors
+- Review browser console for client-side issues
+- Verify environment variables are set correctly

@@ -8,13 +8,84 @@
 -- =====================================================
 -- STEP 1: DROP EXISTING OBJECTS (Clean Setup)
 -- =====================================================
--- Drop triggers first
+
+-- Drop policies first (if tables exist)
+DO $$ 
+BEGIN
+  -- Profiles policies
+  DROP POLICY IF EXISTS "Users can view their own profile" ON public.profiles;
+  DROP POLICY IF EXISTS "Users can insert their own profile" ON public.profiles;
+  DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
+  DROP POLICY IF EXISTS "Anyone can check profile existence" ON public.profiles;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+
+DO $$ 
+BEGIN
+  -- Complaint boxes policies
+  DROP POLICY IF EXISTS "Admins can view their own complaint boxes" ON public.complaint_boxes;
+  DROP POLICY IF EXISTS "Anyone can view complaint boxes by token" ON public.complaint_boxes;
+  DROP POLICY IF EXISTS "Admins can insert their own complaint boxes" ON public.complaint_boxes;
+  DROP POLICY IF EXISTS "Admins can update their own complaint boxes" ON public.complaint_boxes;
+  DROP POLICY IF EXISTS "Admins can delete their own complaint boxes" ON public.complaint_boxes;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+
+DO $$ 
+BEGIN
+  -- Complaints policies
+  DROP POLICY IF EXISTS "Admins can view complaints in their boxes" ON public.complaints;
+  DROP POLICY IF EXISTS "Anyone can view complaints by token" ON public.complaints;
+  DROP POLICY IF EXISTS "Anyone can insert complaints" ON public.complaints;
+  DROP POLICY IF EXISTS "Admins can update complaints in their boxes" ON public.complaints;
+  DROP POLICY IF EXISTS "Admins can delete complaints in their boxes" ON public.complaints;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+
+DO $$ 
+BEGIN
+  -- Feedbacks policies
+  DROP POLICY IF EXISTS "Anyone can view feedbacks" ON public.feedbacks;
+  DROP POLICY IF EXISTS "Anyone can insert feedbacks" ON public.feedbacks;
+  DROP POLICY IF EXISTS "Admins can delete feedbacks in their boxes" ON public.feedbacks;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+
+DO $$ 
+BEGIN
+  -- Analytics policies
+  DROP POLICY IF EXISTS "Admins can view analytics for their boxes" ON public.analytics;
+  DROP POLICY IF EXISTS "Admins can manage analytics for their boxes" ON public.analytics;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+
+-- Drop triggers (with error handling)
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-DROP TRIGGER IF EXISTS update_complaint_boxes_updated_at ON public.complaint_boxes;
-DROP TRIGGER IF EXISTS update_complaints_updated_at ON public.complaints;
-DROP TRIGGER IF EXISTS update_analytics_updated_at ON public.analytics;
-DROP TRIGGER IF EXISTS update_analytics_on_complaint_change ON public.complaints;
-DROP TRIGGER IF EXISTS update_analytics_on_feedback_change ON public.feedbacks;
+
+DO $$ BEGIN
+  DROP TRIGGER IF EXISTS update_complaint_boxes_updated_at ON public.complaint_boxes;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  DROP TRIGGER IF EXISTS update_complaints_updated_at ON public.complaints;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  DROP TRIGGER IF EXISTS update_analytics_updated_at ON public.analytics;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  DROP TRIGGER IF EXISTS update_analytics_on_complaint_change ON public.complaints;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  DROP TRIGGER IF EXISTS update_analytics_on_feedback_change ON public.feedbacks;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
 
 -- Drop functions
 DROP FUNCTION IF EXISTS public.update_updated_at_column() CASCADE;
@@ -23,7 +94,7 @@ DROP FUNCTION IF EXISTS public.update_box_analytics() CASCADE;
 DROP FUNCTION IF EXISTS public.update_feedback_analytics() CASCADE;
 DROP FUNCTION IF EXISTS public.check_user_exists(UUID) CASCADE;
 
--- Drop tables (in correct order due to foreign keys)
+-- Drop tables (CASCADE handles dependencies)
 DROP TABLE IF EXISTS public.analytics CASCADE;
 DROP TABLE IF EXISTS public.feedbacks CASCADE;
 DROP TABLE IF EXISTS public.complaints CASCADE;
@@ -141,11 +212,11 @@ AS $$
 BEGIN
   INSERT INTO public.profiles (id, username, email)
   VALUES (
-    new.id,
-    COALESCE(new.raw_user_meta_data->>'username', split_part(new.email, '@', 1)),
-    new.email
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'username', split_part(NEW.email, '@', 1)),
+    NEW.email
   );
-  RETURN new;
+  RETURN NEW;
 END;
 $$;
 
@@ -330,9 +401,9 @@ CREATE POLICY "Admins can view complaints in their boxes"
   ON public.complaints FOR SELECT TO authenticated
   USING (
     EXISTS (
-      SELECT 1 FROM complaint_boxes
-      WHERE complaint_boxes.id = complaints.box_id
-      AND complaint_boxes.admin_id = auth.uid()
+      SELECT 1 FROM public.complaint_boxes
+      WHERE public.complaint_boxes.id = complaints.box_id
+      AND public.complaint_boxes.admin_id = auth.uid()
     )
   );
 
@@ -348,9 +419,9 @@ CREATE POLICY "Admins can update complaints in their boxes"
   ON public.complaints FOR UPDATE TO authenticated
   USING (
     EXISTS (
-      SELECT 1 FROM complaint_boxes
-      WHERE complaint_boxes.id = complaints.box_id
-      AND complaint_boxes.admin_id = auth.uid()
+      SELECT 1 FROM public.complaint_boxes
+      WHERE public.complaint_boxes.id = complaints.box_id
+      AND public.complaint_boxes.admin_id = auth.uid()
     )
   );
 
@@ -358,9 +429,9 @@ CREATE POLICY "Admins can delete complaints in their boxes"
   ON public.complaints FOR DELETE TO authenticated
   USING (
     EXISTS (
-      SELECT 1 FROM complaint_boxes
-      WHERE complaint_boxes.id = complaints.box_id
-      AND complaint_boxes.admin_id = auth.uid()
+      SELECT 1 FROM public.complaint_boxes
+      WHERE public.complaint_boxes.id = complaints.box_id
+      AND public.complaint_boxes.admin_id = auth.uid()
     )
   );
 
@@ -380,9 +451,9 @@ CREATE POLICY "Admins can delete feedbacks in their boxes"
   ON public.feedbacks FOR DELETE TO authenticated
   USING (
     EXISTS (
-      SELECT 1 FROM complaint_boxes
-      WHERE complaint_boxes.id = feedbacks.box_id
-      AND complaint_boxes.admin_id = auth.uid()
+      SELECT 1 FROM public.complaint_boxes
+      WHERE public.complaint_boxes.id = feedbacks.box_id
+      AND public.complaint_boxes.admin_id = auth.uid()
     )
   );
 
@@ -394,9 +465,9 @@ CREATE POLICY "Admins can view analytics for their boxes"
   ON public.analytics FOR SELECT TO authenticated
   USING (
     EXISTS (
-      SELECT 1 FROM complaint_boxes
-      WHERE complaint_boxes.id = analytics.box_id
-      AND complaint_boxes.admin_id = auth.uid()
+      SELECT 1 FROM public.complaint_boxes
+      WHERE public.complaint_boxes.id = analytics.box_id
+      AND public.complaint_boxes.admin_id = auth.uid()
     )
   );
 
@@ -404,9 +475,9 @@ CREATE POLICY "Admins can manage analytics for their boxes"
   ON public.analytics FOR ALL TO authenticated
   USING (
     EXISTS (
-      SELECT 1 FROM complaint_boxes
-      WHERE complaint_boxes.id = analytics.box_id
-      AND complaint_boxes.admin_id = auth.uid()
+      SELECT 1 FROM public.complaint_boxes
+      WHERE public.complaint_boxes.id = analytics.box_id
+      AND public.complaint_boxes.admin_id = auth.uid()
     )
   );
 
@@ -451,8 +522,8 @@ CREATE POLICY "Admins can delete complaint attachments"
   USING (
     bucket_id = 'complaint-attachments'
     AND EXISTS (
-      SELECT 1 FROM complaints c
-      JOIN complaint_boxes cb ON c.box_id = cb.id
+      SELECT 1 FROM public.complaints c
+      JOIN public.complaint_boxes cb ON c.box_id = cb.id
       WHERE cb.admin_id = auth.uid()
       AND c.attachment_url LIKE '%' || storage.objects.name || '%'
     )

@@ -6,6 +6,13 @@
 -- =====================================================
 
 -- =====================================================
+-- STEP 0: EXTENSIONS
+-- =====================================================
+
+-- Needed for gen_random_uuid()
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- =====================================================
 -- STEP 1: DROP EXISTING OBJECTS (Clean Setup)
 -- =====================================================
 
@@ -245,7 +252,14 @@ DECLARE
   v_box_id UUID;
 BEGIN
   v_box_id := COALESCE(NEW.box_id, OLD.box_id);
-  
+
+  -- If the parent complaint box is being deleted (cascade), skip analytics updates
+  IF v_box_id IS NULL OR NOT EXISTS (
+    SELECT 1 FROM public.complaint_boxes WHERE id = v_box_id
+  ) THEN
+    RETURN COALESCE(NEW, OLD);
+  END IF;
+
   INSERT INTO public.analytics (box_id, date, total_complaints, received_count, in_progress_count, resolved_count, rejected_count)
   SELECT 
     v_box_id,
@@ -265,7 +279,7 @@ BEGIN
     resolved_count = EXCLUDED.resolved_count,
     rejected_count = EXCLUDED.rejected_count,
     updated_at = now();
-    
+
   RETURN COALESCE(NEW, OLD);
 END;
 $$;
@@ -282,7 +296,14 @@ DECLARE
   v_box_id UUID;
 BEGIN
   v_box_id := COALESCE(NEW.box_id, OLD.box_id);
-  
+
+  -- If the parent complaint box is being deleted (cascade), skip analytics updates
+  IF v_box_id IS NULL OR NOT EXISTS (
+    SELECT 1 FROM public.complaint_boxes WHERE id = v_box_id
+  ) THEN
+    RETURN COALESCE(NEW, OLD);
+  END IF;
+
   INSERT INTO public.analytics (box_id, date, total_feedbacks, avg_rating)
   SELECT 
     v_box_id,
@@ -296,7 +317,7 @@ BEGIN
     total_feedbacks = EXCLUDED.total_feedbacks,
     avg_rating = EXCLUDED.avg_rating,
     updated_at = now();
-    
+
   RETURN COALESCE(NEW, OLD);
 END;
 $$;

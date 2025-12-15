@@ -144,7 +144,41 @@ const Dashboard = () => {
   const handleDeleteBox = async (boxId: string) => {
     setDeletingBox(boxId);
 
+    const extractStoragePath = (publicUrl: string) => {
+      try {
+        const url = new URL(publicUrl);
+        const marker = "/object/public/complaint-attachments/";
+        const idx = url.pathname.indexOf(marker);
+        if (idx === -1) return null;
+        return decodeURIComponent(url.pathname.slice(idx + marker.length));
+      } catch {
+        return null;
+      }
+    };
+
     try {
+      // 1) Delete attachment files (storage) BEFORE deleting the box
+      const { data: attachments, error: attachmentsError } = await supabase
+        .from("complaints")
+        .select("attachment_url")
+        .eq("box_id", boxId)
+        .not("attachment_url", "is", null);
+
+      if (attachmentsError) throw attachmentsError;
+
+      const paths = (attachments || [])
+        .map((r: any) => extractStoragePath(r.attachment_url))
+        .filter(Boolean) as string[];
+
+      if (paths.length > 0) {
+        const { error: storageError } = await supabase.storage
+          .from("complaint-attachments")
+          .remove(paths);
+
+        if (storageError) throw storageError;
+      }
+
+      // 2) Delete the complaint box (DB will cascade-delete complaints, feedbacks, analytics)
       const { error } = await supabase
         .from("complaint_boxes")
         .delete()
@@ -155,7 +189,7 @@ const Dashboard = () => {
       toast.success("Complaint box deleted successfully");
       fetchBoxes();
     } catch (error: any) {
-      toast.error(error.message || "Failed to delete complaint box");
+      toast.error(error?.message || "Failed to delete complaint box");
     } finally {
       setDeletingBox(null);
     }

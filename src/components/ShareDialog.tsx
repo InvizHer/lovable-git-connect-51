@@ -2,16 +2,16 @@ import { useState } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { 
-  Share2, Copy, ExternalLink, Mail, 
-  MessageCircle, Send, Instagram, Twitter 
+  Share2, Copy, Check, ExternalLink, Mail, 
+  MessageCircle, Send, Link2
 } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface ShareDialogProps {
   open: boolean;
@@ -20,6 +20,50 @@ interface ShareDialogProps {
   title: string;
   description?: string;
 }
+
+// Brand colors for social platforms
+const socialPlatforms = [
+  {
+    id: "whatsapp",
+    name: "WhatsApp",
+    icon: MessageCircle,
+    color: "#25D366",
+    hoverBg: "hover:bg-[#25D366]/10",
+    hoverBorder: "hover:border-[#25D366]/50",
+    hoverText: "hover:text-[#25D366]",
+  },
+  {
+    id: "telegram",
+    name: "Telegram",
+    icon: Send,
+    color: "#0088cc",
+    hoverBg: "hover:bg-[#0088cc]/10",
+    hoverBorder: "hover:border-[#0088cc]/50",
+    hoverText: "hover:text-[#0088cc]",
+  },
+  {
+    id: "twitter",
+    name: "X (Twitter)",
+    icon: () => (
+      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+      </svg>
+    ),
+    color: "#000000",
+    hoverBg: "hover:bg-foreground/10",
+    hoverBorder: "hover:border-foreground/50",
+    hoverText: "hover:text-foreground",
+  },
+  {
+    id: "email",
+    name: "Email",
+    icon: Mail,
+    color: "hsl(var(--primary))",
+    hoverBg: "hover:bg-primary/10",
+    hoverBorder: "hover:border-primary/50",
+    hoverText: "hover:text-primary",
+  },
+];
 
 export function ShareDialog({ open, onOpenChange, url, title, description }: ShareDialogProps) {
   const [copied, setCopied] = useState(false);
@@ -35,123 +79,129 @@ export function ShareDialog({ open, onOpenChange, url, title, description }: Sha
     }
   };
 
-  const handleOpen = () => {
-    window.open(url, "_blank");
+  const getShareUrl = (platform: string) => {
+    const encodedUrl = encodeURIComponent(url);
+    const encodedTitle = encodeURIComponent(title);
+    const encodedDesc = encodeURIComponent(description || title);
+
+    switch (platform) {
+      case "whatsapp":
+        return `https://wa.me/?text=${encodedTitle}%0A${encodedUrl}`;
+      case "telegram":
+        return `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`;
+      case "twitter":
+        return `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`;
+      case "email":
+        return `mailto:?subject=${encodedTitle}&body=${encodedDesc}%0A%0A${encodedUrl}`;
+      default:
+        return url;
+    }
   };
 
-  const shareLinks = {
-    whatsapp: `https://wa.me/?text=${encodeURIComponent(`${title}\n${url}`)}`,
-    telegram: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`,
-    instagram: `https://www.instagram.com/`, // Instagram doesn't support direct sharing, opens Instagram
-    twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`,
-    email: `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(`${description || title}\n\n${url}`)}`,
-  };
-
-  const openShareLink = (platform: keyof typeof shareLinks) => {
-    window.open(shareLinks[platform], "_blank", "width=600,height=400");
+  const openShareLink = (platform: string) => {
+    window.open(getShareUrl(platform), "_blank", "width=600,height=400");
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-card border-primary/30 max-w-[95vw] sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="gradient-text flex items-center gap-2 text-xl sm:text-2xl">
-            <Share2 className="w-5 h-5 sm:w-6 sm:h-6" />
-            Share Complaint Box
-          </DialogTitle>
-          <DialogDescription className="text-sm">
-            Choose how you want to share this complaint box link
-          </DialogDescription>
+      <DialogContent className="max-w-[92vw] sm:max-w-md p-0 gap-0 overflow-hidden border-border/50 bg-background">
+        {/* Header */}
+        <DialogHeader className="p-4 sm:p-5 pb-3 sm:pb-4 border-b border-border/50 bg-gradient-to-br from-primary/5 to-accent/5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent shadow-lg">
+              <Share2 className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-primary-foreground" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <DialogTitle className="text-base sm:text-lg font-bold text-foreground">
+                Share Complaint Box
+              </DialogTitle>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                Share this link with others
+              </p>
+            </div>
+          </div>
         </DialogHeader>
         
-        <div className="space-y-4 py-2">
-          {/* Link Preview */}
-          <div className="p-3 bg-secondary/50 rounded-lg border border-border">
-            <p className="text-xs font-semibold text-muted-foreground mb-1">Link Preview</p>
-            <p className="text-xs break-all text-primary font-mono">{url}</p>
-          </div>
-
-          {/* Social Media Share Options */}
-          <div className="space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1">
-              Share via Social Media
-            </p>
-            <div className="grid grid-cols-2 gap-2 sm:gap-3">
-              <Button
-                variant="outline"
-                className="h-auto py-3 px-3 sm:px-4 flex flex-col sm:flex-row items-center justify-center gap-2 hover:bg-[#25D366]/10 hover:border-[#25D366]/50 hover:text-[#25D366] transition-colors"
-                onClick={() => openShareLink("whatsapp")}
-              >
-                <MessageCircle className="w-5 h-5" />
-                <span className="text-xs sm:text-sm font-medium">WhatsApp</span>
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="h-auto py-3 px-3 sm:px-4 flex flex-col sm:flex-row items-center justify-center gap-2 hover:bg-[#0088cc]/10 hover:border-[#0088cc]/50 hover:text-[#0088cc] transition-colors"
-                onClick={() => openShareLink("telegram")}
-              >
-                <Send className="w-5 h-5" />
-                <span className="text-xs sm:text-sm font-medium">Telegram</span>
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="h-auto py-3 px-3 sm:px-4 flex flex-col sm:flex-row items-center justify-center gap-2 hover:bg-[#E4405F]/10 hover:border-[#E4405F]/50 hover:text-[#E4405F] transition-colors"
-                onClick={() => openShareLink("instagram")}
-              >
-                <Instagram className="w-5 h-5" />
-                <span className="text-xs sm:text-sm font-medium">Instagram</span>
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="h-auto py-3 px-3 sm:px-4 flex flex-col sm:flex-row items-center justify-center gap-2 hover:bg-[#1DA1F2]/10 hover:border-[#1DA1F2]/50 hover:text-[#1DA1F2] transition-colors"
-                onClick={() => openShareLink("twitter")}
-              >
-                <Twitter className="w-5 h-5" />
-                <span className="text-xs sm:text-sm font-medium">Twitter</span>
-              </Button>
+        <div className="p-4 sm:p-5 space-y-4 sm:space-y-5">
+          {/* Link Preview Card */}
+          <div className="relative group">
+            <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-3.5 rounded-xl border border-border bg-muted/30 transition-colors">
+              <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Link2 className="w-4 h-4 sm:w-5 sm:h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-0.5">
+                  Shareable Link
+                </p>
+                <p className="text-xs sm:text-sm font-mono text-foreground truncate">
+                  {url}
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Email Share */}
-          <div className="space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1">
-              Share via Email
-            </p>
+          {/* Quick Actions - Copy & Open */}
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <Button
+              onClick={handleCopy}
+              className={cn(
+                "h-11 sm:h-12 gap-2 font-semibold transition-all duration-200",
+                copied 
+                  ? "bg-green-500 hover:bg-green-500 text-white" 
+                  : "bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground"
+              )}
+            >
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span className="text-xs sm:text-sm">Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4" />
+                  <span className="text-xs sm:text-sm">Copy Link</span>
+                </>
+              )}
+            </Button>
+            
             <Button
               variant="outline"
-              className="w-full h-auto py-3 flex items-center justify-center gap-2 hover:bg-primary/10 hover:border-primary/50 transition-colors"
-              onClick={() => openShareLink("email")}
+              onClick={() => window.open(url, "_blank")}
+              className="h-11 sm:h-12 gap-2 font-semibold border-border hover:bg-accent/10 hover:border-primary/40 transition-all duration-200"
             >
-              <Mail className="w-5 h-5" />
-              <span className="text-sm font-medium">Send via Email</span>
+              <ExternalLink className="w-4 h-4" />
+              <span className="text-xs sm:text-sm">Open Link</span>
             </Button>
           </div>
 
-          {/* Direct Actions */}
-          <div className="space-y-2 pt-2 border-t border-border">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1">
-              Direct Actions
+          {/* Social Share Grid */}
+          <div className="space-y-2.5 sm:space-y-3">
+            <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Share via
             </p>
-            <div className="grid grid-cols-2 gap-2 sm:gap-3">
-              <Button
-                onClick={handleCopy}
-                className="h-auto py-3 px-3 sm:px-4 bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
-              >
-                <Copy className="w-4 h-4 mr-2" />
-                <span className="text-sm font-medium">{copied ? "Copied!" : "Copy Link"}</span>
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={handleOpen}
-                className="h-auto py-3 px-3 sm:px-4 border-primary/30 hover:bg-primary/10 transition-colors"
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                <span className="text-sm font-medium">Open Link</span>
-              </Button>
+            <div className="grid grid-cols-4 gap-2 sm:gap-3">
+              {socialPlatforms.map((platform) => {
+                const Icon = platform.icon;
+                return (
+                  <button
+                    key={platform.id}
+                    onClick={() => openShareLink(platform.id)}
+                    className={cn(
+                      "flex flex-col items-center justify-center gap-1.5 sm:gap-2 p-3 sm:p-4 rounded-xl",
+                      "border border-border/60 bg-background transition-all duration-200",
+                      "hover:scale-[1.02] hover:shadow-md active:scale-[0.98]",
+                      platform.hoverBg,
+                      platform.hoverBorder,
+                      platform.hoverText
+                    )}
+                  >
+                    <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                    <span className="text-[10px] sm:text-xs font-medium">
+                      {platform.name}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

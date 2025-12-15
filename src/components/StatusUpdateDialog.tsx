@@ -92,31 +92,46 @@ export const StatusUpdateDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] sm:max-w-lg glass-card border-primary/30 p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="space-y-2 pb-2">
-          <DialogTitle className="gradient-text text-base sm:text-xl flex items-center gap-2">
-            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
-            Update Status
-          </DialogTitle>
-          <DialogDescription className="text-[11px] sm:text-sm break-words">
-            {complaintTitle}
-          </DialogDescription>
+      <DialogContent className="max-w-[95vw] sm:max-w-lg glass-card border-primary/30 p-0 gap-0 max-h-[90vh] overflow-hidden">
+        {/* Enhanced Header Section */}
+        <DialogHeader className="p-4 sm:p-5 border-b border-border/50 bg-gradient-to-br from-primary/5 to-accent/5">
+          <div className="flex items-start gap-3 sm:gap-4">
+            {/* Icon Container */}
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent shadow-lg">
+              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
+            </div>
+            
+            {/* Title & Complaint Info */}
+            <div className="flex-1 min-w-0 space-y-1.5 sm:space-y-2">
+              <DialogTitle className="text-base sm:text-lg font-bold text-foreground">
+                Update Complaint Status
+              </DialogTitle>
+              <DialogDescription className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
+                {complaintTitle}
+              </DialogDescription>
+              
+              {/* Current Status Badge */}
+              {currentStatusData && (
+                <div className="flex items-center gap-2 pt-1">
+                  <span className="text-[10px] sm:text-xs text-muted-foreground">Current:</span>
+                  <div className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] sm:text-xs font-semibold",
+                    "bg-primary/10 text-primary border border-primary/20"
+                  )}>
+                    <currentStatusData.icon className="w-3 h-3" />
+                    {currentStatusData.label}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="space-y-4 pt-1">
-          {/* Current Status Summary */}
-          {currentStatusData && (
-            <div className="flex items-center gap-3 rounded-lg border border-border bg-background/60 px-3 py-2.5 sm:px-4 sm:py-3">
-              <div className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] sm:text-xs font-semibold text-primary">
-                Current: {currentStatusData.label}
-              </div>
-            </div>
-          )}
-
+        <div className="p-4 sm:p-5 space-y-4 overflow-y-auto max-h-[60vh]">
           {/* Status Selection List */}
-          <div className="space-y-2">
-            <p className="text-[11px] sm:text-xs font-medium text-muted-foreground">
-              Select the new status
+          <div className="space-y-2.5">
+            <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Select new status
             </p>
 
             <div className="flex flex-col gap-2">

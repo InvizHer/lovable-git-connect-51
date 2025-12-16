@@ -27,11 +27,11 @@ export function SocialShareButton({ platform, onClick }: Props) {
         className={cn(
           "grid place-items-center rounded-lg border border-border/60",
           "h-10 w-10 sm:h-11 sm:w-11",
-          "bg-muted/30 text-foreground transition-colors",
+          "bg-muted/30 transition-colors",
           `group-hover:bg-[hsl(var(--${v})/0.14)] group-hover:border-[hsl(var(--${v})/0.35)]`
         )}
       >
-        <Icon className="h-5 w-5" />
+        <Icon className={cn("h-5 w-5", `text-[hsl(var(--${v}))]`)} />
       </span>
       <span className="text-[10px] sm:text-xs font-semibold leading-tight text-center max-w-full truncate">
         {platform.name}

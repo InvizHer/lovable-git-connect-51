@@ -166,14 +166,22 @@ const Analytics = () => {
   };
 
   const getStatusDistribution = () => {
-    const latest = analytics[analytics.length - 1];
-    if (!latest) return [];
+    // Aggregate counts from all analytics records in the selected period
+    const totals = analytics.reduce(
+      (acc, a) => ({
+        received: acc.received + (a.received_count || 0),
+        in_progress: acc.in_progress + (a.in_progress_count || 0),
+        resolved: acc.resolved + (a.resolved_count || 0),
+        rejected: acc.rejected + (a.rejected_count || 0),
+      }),
+      { received: 0, in_progress: 0, resolved: 0, rejected: 0 }
+    );
 
     return [
-      { name: "Received", value: latest.received_count, color: COLORS.received },
-      { name: "In Progress", value: latest.in_progress_count, color: COLORS.in_progress },
-      { name: "Resolved", value: latest.resolved_count, color: COLORS.resolved },
-      { name: "Rejected", value: latest.rejected_count, color: COLORS.rejected },
+      { name: "Received", value: totals.received, color: COLORS.received },
+      { name: "In Progress", value: totals.in_progress, color: COLORS.in_progress },
+      { name: "Resolved", value: totals.resolved, color: COLORS.resolved },
+      { name: "Rejected", value: totals.rejected, color: COLORS.rejected },
     ].filter(item => item.value > 0);
   };
 

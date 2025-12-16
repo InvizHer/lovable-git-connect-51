@@ -38,13 +38,8 @@ function buildShareUrl({
       return `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`;
     case "twitter":
       return `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`;
-    case "linkedin":
-      return `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
     case "email":
       return `mailto:?subject=${encodedTitle}&body=${encodedDesc}%0A%0A${encodedUrl}`;
-    case "discord":
-      // Discord doesn't have a reliable universal web-share URL. We'll copy the link and let the user paste.
-      return url;
     default:
       return url;
   }
@@ -66,13 +61,7 @@ export function ShareDialog({ open, onOpenChange, url, title, description }: Sha
     }
   };
 
-  const openShareLink = async (platform: SharePlatformId) => {
-    if (platform === "discord") {
-      await handleCopy();
-      toast.message("Paste the copied link into Discord");
-      return;
-    }
-
+  const openShareLink = (platform: SharePlatformId) => {
     const shareUrl = buildShareUrl({ platform, url: safeUrl, title, description });
     window.open(shareUrl, "_blank", "noopener,noreferrer,width=600,height=560");
   };
@@ -161,7 +150,7 @@ export function ShareDialog({ open, onOpenChange, url, title, description }: Sha
             <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Share via
             </p>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
               {sharePlatforms.map((platform) => (
                 <SocialShareButton
                   key={platform.id}
@@ -170,9 +159,6 @@ export function ShareDialog({ open, onOpenChange, url, title, description }: Sha
                 />
               ))}
             </div>
-            <p className="text-[11px] sm:text-xs text-muted-foreground">
-              Tip: Discord will copy the link so you can paste it into a message.
-            </p>
           </section>
         </div>
       </DialogContent>

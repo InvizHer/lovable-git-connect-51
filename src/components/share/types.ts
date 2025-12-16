@@ -4,8 +4,6 @@ export type SharePlatformId =
   | "whatsapp"
   | "telegram"
   | "twitter"
-  | "linkedin"
-  | "discord"
   | "email";
 
 export type SharePlatform = {

@@ -166,22 +166,20 @@ const Analytics = () => {
   };
 
   const getStatusDistribution = () => {
-    // Aggregate counts from all analytics records in the selected period
-    const totals = analytics.reduce(
-      (acc, a) => ({
-        received: acc.received + (a.received_count || 0),
-        in_progress: acc.in_progress + (a.in_progress_count || 0),
-        resolved: acc.resolved + (a.resolved_count || 0),
-        rejected: acc.rejected + (a.rejected_count || 0),
+    // Calculate status distribution from categoryStats (which is from actual complaints)
+    const totals = categoryStats.reduce(
+      (acc, cat) => ({
+        received: acc.received + cat.received,
+        under_review: acc.under_review + cat.under_review,
+        solved: acc.solved + cat.solved,
       }),
-      { received: 0, in_progress: 0, resolved: 0, rejected: 0 }
+      { received: 0, under_review: 0, solved: 0 }
     );
 
     return [
       { name: "Received", value: totals.received, color: COLORS.received },
-      { name: "In Progress", value: totals.in_progress, color: COLORS.in_progress },
-      { name: "Resolved", value: totals.resolved, color: COLORS.resolved },
-      { name: "Rejected", value: totals.rejected, color: COLORS.rejected },
+      { name: "Under Review", value: totals.under_review, color: COLORS.in_progress },
+      { name: "Solved", value: totals.solved, color: COLORS.resolved },
     ].filter(item => item.value > 0);
   };
 

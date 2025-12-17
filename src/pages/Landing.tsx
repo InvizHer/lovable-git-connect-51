@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, MessageSquare, TrendingUp, Lock, Sparkles, Zap, Star } from "lucide-react";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Shield, MessageSquare, TrendingUp, Lock, Sparkles, CheckCircle, Users, Clock, ArrowRight, LogIn } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import FrontendHeader from "@/components/FrontendHeader";
 import Footer from "@/components/Footer";
@@ -95,7 +95,7 @@ const Landing = () => {
                 <Button 
                   size="lg" 
                   className="text-base px-8 py-6 rounded-full bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg"
-                  onClick={() => navigate("/login")}
+                  onClick={() => navigate("/signup")}
                 >
                   <Sparkles className="mr-2 h-5 w-5" />
                   Get Started
@@ -104,9 +104,10 @@ const Landing = () => {
                   size="lg" 
                   variant="outline" 
                   className="text-base px-8 py-6 rounded-full border-2"
-                  onClick={() => navigate("/signup")}
+                  onClick={() => navigate("/login")}
                 >
-                  Sign Up Free
+                  <LogIn className="mr-2 h-5 w-5" />
+                  Sign In
                 </Button>
               </div>
 
@@ -218,8 +219,12 @@ const Landing = () => {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-24 bg-secondary/30">
-        <div className="container mx-auto px-4">
+      <section className="py-24 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-secondary/30 via-background to-secondary/30" />
+        <div className="absolute top-1/2 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 right-1/4 w-80 h-80 bg-accent/5 rounded-full blur-3xl" />
+        
+        <div className="container mx-auto px-4 relative z-10">
           <motion.div 
             className="max-w-6xl mx-auto"
             initial="hidden"
@@ -227,68 +232,135 @@ const Landing = () => {
             viewport={{ once: true }}
             variants={containerVariants}
           >
-            <motion.h2 
-              className="text-3xl sm:text-4xl font-bold text-center mb-16 gradient-text"
-              variants={itemVariants}
-            >
-              How It Works
-            </motion.h2>
+            <motion.div className="text-center mb-16" variants={itemVariants}>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border mb-6">
+                <Clock className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">Simple 4-Step Process</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text mb-4">
+                How It Works
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Get started in minutes with our intuitive platform designed for both administrators and users
+              </p>
+            </motion.div>
             
-            <div className="grid md:grid-cols-2 gap-12">
-              <motion.div className="space-y-6" variants={itemVariants}>
-                <h3 className="text-2xl font-semibold text-primary flex items-center gap-2">
-                  <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent">
-                    <Shield className="h-5 w-5 text-white" />
-                  </div>
-                  For Administrators
-                </h3>
-                <div className="space-y-4">
-                  {[
-                    { step: "1", title: "Create Account", desc: "Sign up as an administrator with your credentials" },
-                    { step: "2", title: "Create Complaint Box", desc: "Set up complaint boxes with optional password protection" },
-                    { step: "3", title: "Share Link", desc: "Distribute the unique link to your students or staff" },
-                    { step: "4", title: "Manage Complaints", desc: "Review, update status, and resolve complaints efficiently" }
-                  ].map((item) => (
-                    <div key={item.step} className="flex gap-4 glass-card p-4 rounded-xl">
-                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent text-white flex items-center justify-center font-bold shadow-lg">
-                        {item.step}
-                      </div>
-                      <div>
-                        <h4 className="font-semibold mb-1">{item.title}</h4>
-                        <p className="text-sm text-muted-foreground">{item.desc}</p>
-                      </div>
+            <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
+              {/* For Administrators */}
+              <motion.div variants={itemVariants}>
+                <div className="glass-card rounded-3xl p-8 border-2 border-primary/20 h-full">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="p-4 rounded-2xl bg-gradient-to-br from-primary to-accent shadow-lg">
+                      <Shield className="h-8 w-8 text-white" />
                     </div>
-                  ))}
+                    <div>
+                      <h3 className="text-2xl font-bold">For Administrators</h3>
+                      <p className="text-muted-foreground">Manage complaints efficiently</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-6">
+                    {[
+                      { icon: Users, title: "Create Account", desc: "Sign up as an administrator with your credentials", color: "from-blue-500 to-cyan-500" },
+                      { icon: MessageSquare, title: "Create Complaint Box", desc: "Set up complaint boxes with optional password protection", color: "from-purple-500 to-pink-500" },
+                      { icon: TrendingUp, title: "Share & Distribute", desc: "Share the unique link or QR code to your community", color: "from-orange-500 to-red-500" },
+                      { icon: CheckCircle, title: "Manage & Resolve", desc: "Review, update status, and resolve complaints efficiently", color: "from-green-500 to-emerald-500" }
+                    ].map((item, index) => (
+                      <div key={index} className="flex gap-4 group">
+                        <div className="relative flex flex-col items-center">
+                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                            <item.icon className="h-6 w-6 text-white" />
+                          </div>
+                          {index < 3 && (
+                            <div className="w-0.5 h-full bg-gradient-to-b from-primary/50 to-transparent mt-2" />
+                          )}
+                        </div>
+                        <div className="flex-1 pb-6">
+                          <h4 className="font-semibold text-lg mb-1">{item.title}</h4>
+                          <p className="text-sm text-muted-foreground">{item.desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </motion.div>
 
-              <motion.div className="space-y-6" variants={itemVariants}>
-                <h3 className="text-2xl font-semibold text-primary flex items-center gap-2">
-                  <div className="p-2 rounded-xl bg-gradient-to-br from-accent to-purple-600">
-                    <MessageSquare className="h-5 w-5 text-white" />
-                  </div>
-                  For Users
-                </h3>
-                <div className="space-y-4">
-                  {[
-                    { step: "1", title: "Access Box", desc: "Open the complaint box link shared by your administrator" },
-                    { step: "2", title: "Submit Complaint", desc: "Write your complaint anonymously - no login required" },
-                    { step: "3", title: "Get Token", desc: "Receive a unique tracking token for your complaint" },
-                    { step: "4", title: "Track Status", desc: "Check your complaint status anytime using your token" }
-                  ].map((item) => (
-                    <div key={item.step} className="flex gap-4 glass-card p-4 rounded-xl">
-                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-accent to-purple-600 text-white flex items-center justify-center font-bold shadow-lg">
-                        {item.step}
-                      </div>
-                      <div>
-                        <h4 className="font-semibold mb-1">{item.title}</h4>
-                        <p className="text-sm text-muted-foreground">{item.desc}</p>
-                      </div>
+              {/* For Users */}
+              <motion.div variants={itemVariants}>
+                <div className="glass-card rounded-3xl p-8 border-2 border-accent/20 h-full">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="p-4 rounded-2xl bg-gradient-to-br from-accent to-purple-600 shadow-lg">
+                      <MessageSquare className="h-8 w-8 text-white" />
                     </div>
-                  ))}
+                    <div>
+                      <h3 className="text-2xl font-bold">For Users</h3>
+                      <p className="text-muted-foreground">Submit complaints anonymously</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-6">
+                    {[
+                      { icon: ArrowRight, title: "Access Box", desc: "Open the complaint box link shared by your administrator", color: "from-violet-500 to-purple-500" },
+                      { icon: MessageSquare, title: "Submit Complaint", desc: "Write your complaint anonymously - no login required", color: "from-fuchsia-500 to-pink-500" },
+                      { icon: Lock, title: "Get Tracking Token", desc: "Receive a unique tracking token for your complaint", color: "from-rose-500 to-orange-500" },
+                      { icon: TrendingUp, title: "Track Status", desc: "Check your complaint status anytime using your token", color: "from-amber-500 to-yellow-500" }
+                    ].map((item, index) => (
+                      <div key={index} className="flex gap-4 group">
+                        <div className="relative flex flex-col items-center">
+                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                            <item.icon className="h-6 w-6 text-white" />
+                          </div>
+                          {index < 3 && (
+                            <div className="w-0.5 h-full bg-gradient-to-b from-accent/50 to-transparent mt-2" />
+                          )}
+                        </div>
+                        <div className="flex-1 pb-6">
+                          <h4 className="font-semibold text-lg mb-1">{item.title}</h4>
+                          <p className="text-sm text-muted-foreground">{item.desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </motion.div>
             </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-16 relative">
+        <div className="container mx-auto px-4">
+          <motion.div 
+            className="max-w-4xl mx-auto"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={containerVariants}
+          >
+            <motion.div 
+              className="grid grid-cols-2 md:grid-cols-4 gap-6"
+              variants={containerVariants}
+            >
+              {[
+                { value: "100%", label: "Anonymous", icon: Shield },
+                { value: "Secure", label: "Encrypted", icon: Lock },
+                { value: "Real-time", label: "Tracking", icon: TrendingUp },
+                { value: "Free", label: "To Start", icon: Sparkles }
+              ].map((stat, index) => (
+                <motion.div 
+                  key={index} 
+                  className="glass-card p-6 rounded-2xl text-center border hover:border-primary/50 transition-all group"
+                  variants={itemVariants}
+                >
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 w-fit mx-auto mb-3 group-hover:scale-110 transition-transform">
+                    <stat.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="text-2xl font-bold gradient-text">{stat.value}</div>
+                  <div className="text-sm text-muted-foreground">{stat.label}</div>
+                </motion.div>
+              ))}
+            </motion.div>
           </motion.div>
         </div>
       </section>

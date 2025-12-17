@@ -35,6 +35,13 @@ const FrontendHeader = () => {
             >
               Track Complaint
             </Button>
+            {/* Desktop: Signup button */}
+            <Button 
+              onClick={() => navigate("/signup")}
+              className="hidden md:flex text-sm rounded-full bg-gradient-to-r from-primary to-accent hover:opacity-90"
+            >
+              Sign Up
+            </Button>
             {/* Mobile: Track icon button */}
             <Button 
               variant="ghost" 

@@ -259,25 +259,22 @@ const Landing = () => {
                     </div>
                   </div>
                   
-                  <div className="space-y-6">
+                  <div className="space-y-4">
                     {[
                       { icon: Users, title: "Create Account", desc: "Sign up as an administrator with your credentials", color: "from-blue-500 to-cyan-500" },
                       { icon: MessageSquare, title: "Create Complaint Box", desc: "Set up complaint boxes with optional password protection", color: "from-purple-500 to-pink-500" },
                       { icon: TrendingUp, title: "Share & Distribute", desc: "Share the unique link or QR code to your community", color: "from-orange-500 to-red-500" },
                       { icon: CheckCircle, title: "Manage & Resolve", desc: "Review, update status, and resolve complaints efficiently", color: "from-green-500 to-emerald-500" }
                     ].map((item, index) => (
-                      <div key={index} className="flex gap-4 group">
-                        <div className="relative flex flex-col items-center">
-                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
-                            <item.icon className="h-6 w-6 text-white" />
+                      <div key={index} className="flex items-start gap-4 group">
+                        <div className="flex-shrink-0">
+                          <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                            <item.icon className="h-5 w-5 text-white" />
                           </div>
-                          {index < 3 && (
-                            <div className="w-0.5 h-full bg-gradient-to-b from-primary/50 to-transparent mt-2" />
-                          )}
                         </div>
-                        <div className="flex-1 pb-6">
-                          <h4 className="font-semibold text-lg mb-1">{item.title}</h4>
-                          <p className="text-sm text-muted-foreground">{item.desc}</p>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-base mb-0.5">{item.title}</h4>
+                          <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
                         </div>
                       </div>
                     ))}
@@ -298,25 +295,22 @@ const Landing = () => {
                     </div>
                   </div>
                   
-                  <div className="space-y-6">
+                  <div className="space-y-4">
                     {[
                       { icon: ArrowRight, title: "Access Box", desc: "Open the complaint box link shared by your administrator", color: "from-violet-500 to-purple-500" },
                       { icon: MessageSquare, title: "Submit Complaint", desc: "Write your complaint anonymously - no login required", color: "from-fuchsia-500 to-pink-500" },
                       { icon: Lock, title: "Get Tracking Token", desc: "Receive a unique tracking token for your complaint", color: "from-rose-500 to-orange-500" },
                       { icon: TrendingUp, title: "Track Status", desc: "Check your complaint status anytime using your token", color: "from-amber-500 to-yellow-500" }
                     ].map((item, index) => (
-                      <div key={index} className="flex gap-4 group">
-                        <div className="relative flex flex-col items-center">
-                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
-                            <item.icon className="h-6 w-6 text-white" />
+                      <div key={index} className="flex items-start gap-4 group">
+                        <div className="flex-shrink-0">
+                          <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                            <item.icon className="h-5 w-5 text-white" />
                           </div>
-                          {index < 3 && (
-                            <div className="w-0.5 h-full bg-gradient-to-b from-accent/50 to-transparent mt-2" />
-                          )}
                         </div>
-                        <div className="flex-1 pb-6">
-                          <h4 className="font-semibold text-lg mb-1">{item.title}</h4>
-                          <p className="text-sm text-muted-foreground">{item.desc}</p>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-base mb-0.5">{item.title}</h4>
+                          <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
                         </div>
                       </div>
                     ))}
@@ -328,42 +322,6 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-16 relative">
-        <div className="container mx-auto px-4">
-          <motion.div 
-            className="max-w-4xl mx-auto"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={containerVariants}
-          >
-            <motion.div 
-              className="grid grid-cols-2 md:grid-cols-4 gap-6"
-              variants={containerVariants}
-            >
-              {[
-                { value: "100%", label: "Anonymous", icon: Shield },
-                { value: "Secure", label: "Encrypted", icon: Lock },
-                { value: "Real-time", label: "Tracking", icon: TrendingUp },
-                { value: "Free", label: "To Start", icon: Sparkles }
-              ].map((stat, index) => (
-                <motion.div 
-                  key={index} 
-                  className="glass-card p-6 rounded-2xl text-center border hover:border-primary/50 transition-all group"
-                  variants={itemVariants}
-                >
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 w-fit mx-auto mb-3 group-hover:scale-110 transition-transform">
-                    <stat.icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="text-2xl font-bold gradient-text">{stat.value}</div>
-                  <div className="text-sm text-muted-foreground">{stat.label}</div>
-                </motion.div>
-              ))}
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
 
       {/* CTA Section */}
       <motion.section 

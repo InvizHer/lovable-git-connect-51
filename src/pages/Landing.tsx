@@ -13,26 +13,26 @@ const Landing = () => {
   const features = [
     {
       icon: Shield,
-      title: "Anonymous & Secure",
-      description: "Submit complaints anonymously with complete privacy and security.",
+      title: "Complete Anonymity",
+      description: "No login required for users. Submit complaints without revealing identity - ensuring honest, fear-free feedback.",
       gradient: "from-blue-500 to-cyan-500"
     },
     {
-      icon: MessageSquare,
-      title: "Easy Communication",
-      description: "Simple interface for both administrators and users to communicate effectively.",
+      icon: TrendingUp,
+      title: "Real-time Tracking",
+      description: "Get a unique tracking token for each complaint. Check status updates anytime without creating an account.",
       gradient: "from-purple-500 to-pink-500"
     },
     {
-      icon: TrendingUp,
-      title: "Track Status",
-      description: "Monitor complaint status in real-time with unique tracking tokens.",
+      icon: MessageSquare,
+      title: "Category-wise Analytics",
+      description: "Organize complaints by categories. Get detailed insights and statistics to identify recurring issues.",
       gradient: "from-orange-500 to-red-500"
     },
     {
       icon: Lock,
-      title: "Protected Access",
-      description: "Optional password protection for complaint boxes ensures controlled access.",
+      title: "Password Protection",
+      description: "Secure your complaint boxes with optional passwords to control access within your organization.",
       gradient: "from-green-500 to-emerald-500"
     }
   ];
@@ -259,20 +259,23 @@ const Landing = () => {
                     </div>
                   </div>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-1">
                     {[
                       { icon: Users, title: "Create Account", desc: "Sign up as an administrator with your credentials", color: "from-blue-500 to-cyan-500" },
                       { icon: MessageSquare, title: "Create Complaint Box", desc: "Set up complaint boxes with optional password protection", color: "from-purple-500 to-pink-500" },
                       { icon: TrendingUp, title: "Share & Distribute", desc: "Share the unique link or QR code to your community", color: "from-orange-500 to-red-500" },
                       { icon: CheckCircle, title: "Manage & Resolve", desc: "Review, update status, and resolve complaints efficiently", color: "from-green-500 to-emerald-500" }
-                    ].map((item, index) => (
-                      <div key={index} className="flex items-start gap-4 group">
-                        <div className="flex-shrink-0">
-                          <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                    ].map((item, index, arr) => (
+                      <div key={index} className="flex gap-4 group">
+                        <div className="flex flex-col items-center">
+                          <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform flex-shrink-0`}>
                             <item.icon className="h-5 w-5 text-white" />
                           </div>
+                          {index < arr.length - 1 && (
+                            <div className="w-0.5 h-8 bg-gradient-to-b from-primary/40 to-primary/10 mt-1" />
+                          )}
                         </div>
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 pt-2">
                           <h4 className="font-semibold text-base mb-0.5">{item.title}</h4>
                           <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
                         </div>
@@ -295,20 +298,23 @@ const Landing = () => {
                     </div>
                   </div>
                   
-                  <div className="space-y-4">
+                  <div className="space-y-1">
                     {[
                       { icon: ArrowRight, title: "Access Box", desc: "Open the complaint box link shared by your administrator", color: "from-violet-500 to-purple-500" },
                       { icon: MessageSquare, title: "Submit Complaint", desc: "Write your complaint anonymously - no login required", color: "from-fuchsia-500 to-pink-500" },
                       { icon: Lock, title: "Get Tracking Token", desc: "Receive a unique tracking token for your complaint", color: "from-rose-500 to-orange-500" },
                       { icon: TrendingUp, title: "Track Status", desc: "Check your complaint status anytime using your token", color: "from-amber-500 to-yellow-500" }
-                    ].map((item, index) => (
-                      <div key={index} className="flex items-start gap-4 group">
-                        <div className="flex-shrink-0">
-                          <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                    ].map((item, index, arr) => (
+                      <div key={index} className="flex gap-4 group">
+                        <div className="flex flex-col items-center">
+                          <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform flex-shrink-0`}>
                             <item.icon className="h-5 w-5 text-white" />
                           </div>
+                          {index < arr.length - 1 && (
+                            <div className="w-0.5 h-8 bg-gradient-to-b from-accent/40 to-accent/10 mt-1" />
+                          )}
                         </div>
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 pt-2">
                           <h4 className="font-semibold text-base mb-0.5">{item.title}</h4>
                           <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
                         </div>

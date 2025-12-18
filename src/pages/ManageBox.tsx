@@ -784,9 +784,9 @@ const ManageBox = () => {
 
       {/* View Complaint Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="w-[min(95vw,40rem)] p-0 gap-0 overflow-hidden border-border/50 bg-background max-h-[90vh]">
+        <DialogContent className="w-[min(95vw,40rem)] p-0 gap-0 overflow-hidden border-border/50 bg-background max-h-[90vh] flex flex-col">
           {/* Header */}
-          <DialogHeader className="p-4 sm:p-5 pb-3 sm:pb-4 border-b border-border/50 bg-gradient-to-br from-primary/5 to-accent/5">
+          <DialogHeader className="p-4 sm:p-5 pb-3 sm:pb-4 border-b border-border/50 bg-gradient-to-br from-primary/5 to-accent/5 shrink-0">
             <div className="flex items-start gap-3 min-w-0">
               <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent shadow-[var(--shadow-medium)] shrink-0">
                 <Eye className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-primary-foreground" />
@@ -803,7 +803,7 @@ const ManageBox = () => {
           </DialogHeader>
 
           {/* Body */}
-          <div className="p-4 sm:p-5 space-y-4 overflow-y-auto">
+          <div className="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1">
             {/* Meta Info Grid */}
             <div className="grid grid-cols-2 gap-3">
               {/* Category */}

@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { 
   Loader2, Copy, Trash2, Search, Filter, Eye, Reply, 
   Calendar, MessageSquare, Download, FileText, Image as ImageIcon, 
-  BarChart3, Edit, Save, X, ArrowUpDown, QrCode, MessageCircle, Share2
+  BarChart3, Edit, Save, X, ArrowUpDown, QrCode, MessageCircle, Share2, RefreshCw, Hash, Clock
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -95,6 +95,9 @@ const ManageBox = () => {
   // Status update dialog state
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [complaintToUpdate, setComplaintToUpdate] = useState<Complaint | null>(null);
+  
+  // Refresh state
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -158,7 +161,7 @@ const ManageBox = () => {
     setLoading(false);
   };
 
-  const fetchComplaints = async () => {
+  const fetchComplaints = async (showToast = false) => {
     const { data, error } = await supabase
       .from("complaints")
       .select("*")
@@ -171,6 +174,15 @@ const ManageBox = () => {
     }
 
     setComplaints(data || []);
+    if (showToast) {
+      toast.success("Complaints refreshed");
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchComplaints(true);
+    setRefreshing(false);
   };
 
   const handleSaveEdit = async () => {
@@ -576,9 +588,21 @@ const ManageBox = () => {
           <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
             <Card className="glass-card border-primary/20">
               <CardHeader>
-                <CardTitle className="text-xl sm:text-2xl lg:text-3xl gradient-text">
-                  Complaints ({filteredComplaints.length})
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-xl sm:text-2xl lg:text-3xl gradient-text">
+                    Complaints ({filteredComplaints.length})
+                  </CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                    className="gap-2"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                    <span className="hidden sm:inline">Refresh</span>
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex flex-col sm:flex-row gap-3">
@@ -760,80 +784,163 @@ const ManageBox = () => {
 
       {/* View Complaint Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto glass-card border-primary/30 p-4 sm:p-6">
-          <DialogHeader>
-            <DialogTitle className="text-xl sm:text-2xl break-words gradient-text">
-              {selectedComplaint?.title}
-            </DialogTitle>
-            <DialogDescription className="text-xs sm:text-sm">
-              Submitted on {selectedComplaint && new Date(selectedComplaint.created_at).toLocaleString()}
-            </DialogDescription>
+        <DialogContent className="w-[min(95vw,40rem)] p-0 gap-0 overflow-hidden border-border/50 bg-background max-h-[90vh]">
+          {/* Header */}
+          <DialogHeader className="p-4 sm:p-5 pb-3 sm:pb-4 border-b border-border/50 bg-gradient-to-br from-primary/5 to-accent/5">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent shadow-[var(--shadow-medium)] shrink-0">
+                <Eye className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-primary-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <DialogTitle className="text-base sm:text-lg font-bold text-foreground line-clamp-2">
+                  {selectedComplaint?.title}
+                </DialogTitle>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                  View complaint details
+                </p>
+              </div>
+            </div>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label className="text-sm font-semibold">Category:</Label>
-              <div className="mt-1">
-                <span className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-sm">
-                  {selectedComplaint?.complaint_category}
-                </span>
+
+          {/* Body */}
+          <div className="p-4 sm:p-5 space-y-4 overflow-y-auto">
+            {/* Meta Info Grid */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* Category */}
+              <div className="rounded-xl border border-border bg-muted/30 p-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <MessageSquare className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-semibold text-muted-foreground">Category</p>
+                    <p className="text-xs sm:text-sm font-medium text-foreground truncate">
+                      {selectedComplaint?.complaint_category || "General"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status */}
+              <div className="rounded-xl border border-border bg-muted/30 p-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                    selectedComplaint?.status === 'solved' ? 'bg-green-500/10 text-green-500' :
+                    selectedComplaint?.status === 'under_review' ? 'bg-yellow-500/10 text-yellow-500' :
+                    'bg-blue-500/10 text-blue-500'
+                  }`}>
+                    <Eye className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-semibold text-muted-foreground">Status</p>
+                    <p className={`text-xs sm:text-sm font-medium truncate ${
+                      selectedComplaint?.status === 'solved' ? 'text-green-500' :
+                      selectedComplaint?.status === 'under_review' ? 'text-yellow-500' :
+                      'text-blue-500'
+                    }`}>
+                      {getStatusLabel(selectedComplaint?.status || "")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Token */}
+              <div className="rounded-xl border border-border bg-muted/30 p-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
+                    <Hash className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-semibold text-muted-foreground">Token</p>
+                    <p className="text-xs font-mono text-foreground truncate">
+                      {selectedComplaint?.token}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Date */}
+              <div className="rounded-xl border border-border bg-muted/30 p-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                    <Clock className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-semibold text-muted-foreground">Submitted</p>
+                    <p className="text-xs sm:text-sm font-medium text-foreground truncate">
+                      {selectedComplaint && new Date(selectedComplaint.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div>
-              <Label className="text-sm font-semibold">Complaint Message:</Label>
-              <div className="mt-2 p-4 bg-secondary/50 rounded-lg border border-border">
-                <p className="text-sm whitespace-pre-wrap break-words">{selectedComplaint?.message}</p>
+            {/* Complaint Message */}
+            <div className="space-y-2">
+              <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Complaint Message
+              </p>
+              <div className="rounded-xl border border-border bg-gradient-to-br from-primary/5 to-accent/5 p-4">
+                <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
+                  {selectedComplaint?.message}
+                </p>
               </div>
             </div>
-            
+
+            {/* Admin Reply */}
             {selectedComplaint?.admin_reply && (
-              <div>
-                <Label className="text-sm font-semibold text-primary">Admin Reply:</Label>
-                <div className="mt-2 p-4 bg-gradient-to-br from-primary/10 to-accent/10 rounded-lg border border-primary/20">
-                  <p className="text-sm whitespace-pre-wrap break-words">{selectedComplaint.admin_reply}</p>
-                  <p className="text-xs text-muted-foreground mt-2">
+              <div className="space-y-2">
+                <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Admin Reply
+                </p>
+                <div className="rounded-xl border-2 border-accent/30 bg-gradient-to-br from-accent/10 to-primary/10 p-4">
+                  <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
+                    {selectedComplaint.admin_reply}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
                     Replied on {new Date(selectedComplaint.replied_at!).toLocaleString()}
                   </p>
                 </div>
               </div>
             )}
 
+            {/* Attachment */}
             {selectedComplaint?.attachment_url && (
-              <div className="space-y-3">
-                <Label className="text-sm font-semibold">Attachment:</Label>
-                <div className="p-3 sm:p-4 bg-secondary/50 rounded-lg border border-border space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      {selectedComplaint.attachment_type?.startsWith("image/") ? (
-                        <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
-                      ) : (
-                        <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
-                      )}
-                      <span className="text-xs sm:text-sm font-medium truncate">{selectedComplaint.attachment_name}</span>
+              <div className="space-y-2">
+                <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Attachment
+                </p>
+                <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className={`p-2 rounded-lg ${selectedComplaint.attachment_type?.startsWith("image/") ? 'bg-primary/10' : 'bg-accent/10'}`}>
+                        {selectedComplaint.attachment_type?.startsWith("image/") ? (
+                          <ImageIcon className="w-5 h-5 text-primary" />
+                        ) : (
+                          <FileText className="w-5 h-5 text-accent" />
+                        )}
+                      </div>
+                      <span className="text-sm font-medium truncate">{selectedComplaint.attachment_name}</span>
                     </div>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => window.open(selectedComplaint.attachment_url!, "_blank")}
-                      className="w-full sm:w-auto"
+                      className="shrink-0"
                     >
                       <Download className="w-4 h-4 mr-2" />
                       Download
                     </Button>
                   </div>
                   {selectedComplaint.attachment_type?.startsWith("image/") && (
-                    <div className="relative w-full bg-muted rounded-lg overflow-hidden flex items-center justify-center">
+                    <div className="rounded-lg overflow-hidden border border-border bg-muted">
                       <img
                         src={selectedComplaint.attachment_url}
                         alt="Attachment Preview"
-                        className="w-full h-auto object-contain max-w-full max-h-[250px] sm:max-h-[350px] md:max-h-96"
+                        className="w-full h-auto object-contain max-h-64"
                         onError={(e) => {
-                          console.error("Failed to load image:", selectedComplaint.attachment_url);
                           e.currentTarget.style.display = "none";
-                          const parent = e.currentTarget.parentElement;
-                          if (parent) {
-                            parent.innerHTML = '<div class="text-destructive text-sm p-4">Failed to load image preview</div>';
-                          }
                         }}
                       />
                     </div>
@@ -841,18 +948,6 @@ const ManageBox = () => {
                 </div>
               </div>
             )}
-
-            <div className="pt-2 border-t">
-              <p className="text-xs text-muted-foreground break-all">
-                <strong>Token:</strong> {selectedComplaint?.token}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
-                <strong>Status:</strong> 
-                <span className={`px-3 py-1 rounded-full border text-xs font-semibold ${getStatusColor(selectedComplaint?.status || "")}`}>
-                  {getStatusLabel(selectedComplaint?.status || "")}
-                </span>
-              </p>
-            </div>
           </div>
         </DialogContent>
       </Dialog>

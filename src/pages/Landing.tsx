@@ -176,48 +176,6 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-24 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent" />
-        <div className="container mx-auto px-4 relative z-10">
-          <motion.div 
-            className="max-w-6xl mx-auto"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={containerVariants}
-          >
-            <motion.div className="text-center mb-16" variants={itemVariants}>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 gradient-text">
-                Why Choose TellUs?
-              </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Built for educational institutions and organizations that value transparency and effective communication
-              </p>
-            </motion.div>
-            
-            <motion.div 
-              className="grid md:grid-cols-2 gap-6"
-              variants={containerVariants}
-            >
-              {features.map((feature, index) => (
-                <motion.div key={index} variants={itemVariants}>
-                  <Card className="glass-card border-2 hover:border-primary/50 transition-all duration-300 group h-full">
-                    <CardHeader>
-                      <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg`}>
-                        <feature.icon className="w-8 h-8 text-white" />
-                      </div>
-                      <CardTitle className="text-xl sm:text-2xl">{feature.title}</CardTitle>
-                      <CardDescription className="text-base">{feature.description}</CardDescription>
-                    </CardHeader>
-                  </Card>
-                </motion.div>
-              ))}
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
-
       {/* How It Works Section */}
       <section className="py-24 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-secondary/30 via-background to-secondary/30" />
@@ -328,6 +286,47 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Features Section (Why Choose) */}
+      <section className="py-24 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent" />
+        <div className="container mx-auto px-4 relative z-10">
+          <motion.div 
+            className="max-w-6xl mx-auto"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={containerVariants}
+          >
+            <motion.div className="text-center mb-16" variants={itemVariants}>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 gradient-text">
+                Why Choose TellUs?
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Built for educational institutions and organizations that value transparency and effective communication
+              </p>
+            </motion.div>
+            
+            <motion.div 
+              className="grid md:grid-cols-2 gap-6"
+              variants={containerVariants}
+            >
+              {features.map((feature, index) => (
+                <motion.div key={index} variants={itemVariants}>
+                  <Card className="glass-card border-2 hover:border-primary/50 transition-all duration-300 group h-full">
+                    <CardHeader>
+                      <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg`}>
+                        <feature.icon className="w-8 h-8 text-white" />
+                      </div>
+                      <CardTitle className="text-xl sm:text-2xl">{feature.title}</CardTitle>
+                      <CardDescription className="text-base">{feature.description}</CardDescription>
+                    </CardHeader>
+                  </Card>
+                </motion.div>
+              ))}
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
 
       {/* CTA Section */}
       <motion.section 

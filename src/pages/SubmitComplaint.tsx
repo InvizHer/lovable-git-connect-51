@@ -189,7 +189,7 @@ const SubmitComplaint = () => {
       const storedComplaints = JSON.parse(
         localStorage.getItem("myComplaints") || "[]"
       );
-      storedComplaints.push({ token: newToken, boxId: box.id });
+      storedComplaints.push({ token: newToken, boxId: box.id, title: title });
       localStorage.setItem("myComplaints", JSON.stringify(storedComplaints));
 
       setComplaintToken(newToken);

@@ -111,7 +111,23 @@ export function ShareDialog({ open, onOpenChange, url, title, description }: Sha
             </div>
           </div>
 
-          {/* Quick actions */}
+          {/* Social share - moved above quick actions */}
+          <section className="space-y-2.5 sm:space-y-3">
+            <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Share via
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+              {sharePlatforms.map((platform) => (
+                <SocialShareButton
+                  key={platform.id}
+                  platform={platform}
+                  onClick={() => openShareLink(platform.id)}
+                />
+              ))}
+            </div>
+          </section>
+
+          {/* Quick actions - moved below share options */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
             <Button
               onClick={handleCopy}
@@ -144,22 +160,6 @@ export function ShareDialog({ open, onOpenChange, url, title, description }: Sha
               <span className="text-xs sm:text-sm">Open Link</span>
             </Button>
           </div>
-
-          {/* Social share */}
-          <section className="space-y-2.5 sm:space-y-3">
-            <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Share via
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-              {sharePlatforms.map((platform) => (
-                <SocialShareButton
-                  key={platform.id}
-                  platform={platform}
-                  onClick={() => openShareLink(platform.id)}
-                />
-              ))}
-            </div>
-          </section>
         </div>
       </DialogContent>
     </Dialog>

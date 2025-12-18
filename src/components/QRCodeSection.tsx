@@ -30,7 +30,7 @@ export const QRCodeSection = ({ boxToken, boxTitle, className = "" }: QRCodeSect
       height: qrSize,
       type: "canvas",
       data: complaintUrl,
-      image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='100' cy='100' r='100' fill='white'/%3E%3Ctext x='100' y='115' text-anchor='middle' font-family='system-ui, -apple-system, sans-serif' font-size='40' font-weight='bold' fill='%2309090b'%3ETellUs%3C/text%3E%3C/svg%3E",
+      image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='100' cy='100' r='100' fill='white'/%3E%3Ctext x='100' y='120' text-anchor='middle' font-family='system-ui, -apple-system, sans-serif' font-size='52' font-weight='bold' fill='%2309090b'%3ETellUs%3C/text%3E%3C/svg%3E",
       dotsOptions: {
         color: "#09090b",
         type: "rounded"
